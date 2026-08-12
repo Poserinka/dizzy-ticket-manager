@@ -9,6 +9,7 @@ defined('ABSPATH') || exit;
 final class TicketSalesAdmin
 {
     private const MENU = 'dizzy-tickets';
+    private const ORDERS = 'dizzy-ticket-orders';
     private const CHECKIN = 'dizzy-ticket-checkin';
     private const REPORTS = 'dizzy-ticket-reports';
 
@@ -29,8 +30,9 @@ final class TicketSalesAdmin
 
     public function menu(): void
     {
-        add_menu_page(__('Tickets', 'dizzy-ticket-manager'), __('Tickets', 'dizzy-ticket-manager'), 'manage_options', self::MENU, [$this, 'ordersPage'], 'dashicons-tickets-alt', 26);
-        add_submenu_page(self::MENU, __('Tickets', 'dizzy-ticket-manager'), __('Tickets', 'dizzy-ticket-manager'), 'manage_options', self::MENU, [$this, 'ordersPage']);
+        add_menu_page(__('Tickets', 'dizzy-ticket-manager'), __('Tickets', 'dizzy-ticket-manager'), 'manage_options', self::MENU, [$this, 'ticketsPage'], 'dashicons-tickets-alt', 26);
+        add_submenu_page(self::MENU, __('Tickets', 'dizzy-ticket-manager'), __('Tickets', 'dizzy-ticket-manager'), 'manage_options', self::MENU, [$this, 'ticketsPage']);
+        add_submenu_page(self::MENU, __('Ticket Orders', 'dizzy-ticket-manager'), __('Ticket Orders', 'dizzy-ticket-manager'), 'manage_options', self::ORDERS, [$this, 'ordersPage']);
         add_submenu_page(self::MENU, __('Check-in & Attendance', 'dizzy-ticket-manager'), __('Check-in', 'dizzy-ticket-manager'), 'manage_options', self::CHECKIN, [$this, 'checkinPage']);
         add_submenu_page(self::MENU, __('Ticket Reports', 'dizzy-ticket-manager'), __('Reports', 'dizzy-ticket-manager'), 'manage_options', self::REPORTS, [$this, 'reportsPage']);
         add_submenu_page(self::MENU, __('Payment Settings', 'dizzy-ticket-manager'), __('Payment Settings', 'dizzy-ticket-manager'), 'manage_options', 'dizzy-ticket-payment-settings', [$this, 'settingsPage']);
@@ -68,12 +70,38 @@ final class TicketSalesAdmin
         <?php
     }
 
-    public function ordersPage(): void
+    public function ticketsPage(): void
     {
         $this->guard();
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Tickets', 'dizzy-ticket-manager'); ?></h1>
+            <table class="widefat striped">
+                <thead><tr><th><?php esc_html_e('Ticket', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Holder', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Type', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event date', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Status', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Created', 'dizzy-ticket-manager'); ?></th></tr></thead>
+                <tbody>
+                <?php foreach ($this->repository->allTickets() as $ticket) : $code = (string) $ticket['ticket_code']; ?>
+                    <tr>
+                        <td><code><?php echo esc_html(strtoupper(substr($code, 0, 12))); ?></code></td>
+                        <td><?php echo esc_html((string) $ticket['holder_name']); ?><br><?php echo esc_html((string) $ticket['holder_email']); ?></td>
+                        <td><?php echo esc_html((string) ($ticket['ticket_name'] ?: '—')); ?></td>
+                        <td><?php echo esc_html((string) $ticket['post_title']); ?></td>
+                        <td><?php echo esc_html((string) $ticket['start_datetime']); ?></td>
+                        <td><?php echo esc_html(empty($ticket['checked_in_at']) ? __('Valid', 'dizzy-ticket-manager') : __('Checked in', 'dizzy-ticket-manager')); ?></td>
+                        <td><?php echo esc_html((string) $ticket['created_at']); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+    }
+
+    public function ordersPage(): void
+    {
+        $this->guard();
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Ticket Orders', 'dizzy-ticket-manager'); ?></h1>
             <table class="widefat striped">
                 <thead><tr><th>ID</th><th><?php esc_html_e('Customer', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Amount', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Status', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Created', 'dizzy-ticket-manager'); ?></th></tr></thead>
                 <tbody><?php foreach ($this->repository->allOrders() as $order) : ?><tr><td>#<?php echo esc_html((string) $order['id']); ?></td><td><?php echo esc_html((string) $order['customer_name']); ?><br><?php echo esc_html((string) $order['customer_email']); ?></td><td><?php echo esc_html(get_the_title((int) $order['event_id'])); ?></td><td><?php echo esc_html((string) $order['currency'] . ' ' . (string) $order['total_amount']); ?></td><td><?php echo esc_html(ucfirst((string) $order['status'])); ?></td><td><?php echo esc_html((string) $order['created_at']); ?></td></tr><?php endforeach; ?></tbody>
