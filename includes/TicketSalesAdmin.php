@@ -30,10 +30,10 @@ final class TicketSalesAdmin
 
     public function menu(): void
     {
-        add_menu_page(__('Tickets', 'dizzy-ticket-manager'), __('Tickets', 'dizzy-ticket-manager'), 'manage_options', self::MENU, [$this, 'ticketsPage'], 'dashicons-tickets-alt', 26);
-        add_submenu_page(self::MENU, __('Tickets', 'dizzy-ticket-manager'), __('Tickets', 'dizzy-ticket-manager'), 'manage_options', self::MENU, [$this, 'ticketsPage']);
-        add_submenu_page(self::MENU, __('Ticket Orders', 'dizzy-ticket-manager'), __('Ticket Orders', 'dizzy-ticket-manager'), 'manage_options', self::ORDERS, [$this, 'ordersPage']);
-        add_submenu_page(self::MENU, __('Check-in & Attendance', 'dizzy-ticket-manager'), __('Check-in', 'dizzy-ticket-manager'), 'manage_options', self::CHECKIN, [$this, 'checkinPage']);
+        add_menu_page(__('Tickets', 'dizzy-ticket-manager'), __('Tickets', 'dizzy-ticket-manager'), ControllerRole::TICKETS_CAP, self::MENU, [$this, 'ticketsPage'], 'dashicons-tickets-alt', 26);
+        add_submenu_page(self::MENU, __('Tickets', 'dizzy-ticket-manager'), __('Tickets', 'dizzy-ticket-manager'), ControllerRole::TICKETS_CAP, self::MENU, [$this, 'ticketsPage']);
+        add_submenu_page(self::MENU, __('Ticket Orders', 'dizzy-ticket-manager'), __('Ticket Orders', 'dizzy-ticket-manager'), ControllerRole::TICKETS_CAP, self::ORDERS, [$this, 'ordersPage']);
+        add_submenu_page(self::MENU, __('Check-in & Attendance', 'dizzy-ticket-manager'), __('Check-in', 'dizzy-ticket-manager'), ControllerRole::TICKETS_CAP, self::CHECKIN, [$this, 'checkinPage']);
         add_submenu_page(self::MENU, __('Ticket Reports', 'dizzy-ticket-manager'), __('Reports', 'dizzy-ticket-manager'), 'manage_options', self::REPORTS, [$this, 'reportsPage']);
         add_submenu_page(self::MENU, __('Payment Settings', 'dizzy-ticket-manager'), __('Payment Settings', 'dizzy-ticket-manager'), 'manage_options', 'dizzy-ticket-payment-settings', [$this, 'settingsPage']);
     }
@@ -72,7 +72,7 @@ final class TicketSalesAdmin
 
     public function ticketsPage(): void
     {
-        $this->guard();
+        $this->guard(ControllerRole::TICKETS_CAP);
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Tickets', 'dizzy-ticket-manager'); ?></h1>
@@ -98,7 +98,7 @@ final class TicketSalesAdmin
 
     public function ordersPage(): void
     {
-        $this->guard();
+        $this->guard(ControllerRole::TICKETS_CAP);
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Ticket Orders', 'dizzy-ticket-manager'); ?></h1>
@@ -112,7 +112,7 @@ final class TicketSalesAdmin
 
     public function checkinPage(): void
     {
-        $this->guard();
+        $this->guard(ControllerRole::TICKETS_CAP);
         $totals = $this->repository->attendanceTotals();
         ?>
         <style>#wpbody-content>.notice,#wpbody-content>.update-nag,#wpbody-content>.wrap>.notice{display:none!important}</style>
@@ -215,7 +215,7 @@ final class TicketSalesAdmin
 
     private function authorizedCode(): string
     {
-        $this->guard();
+        $this->guard(ControllerRole::TICKETS_CAP);
         $code = sanitize_text_field(wp_unslash((string) ($_POST['ticket_code'] ?? '')));
         if (! preg_match('/^[a-f0-9]{64}$/', $code)) wp_die(esc_html__('Invalid ticket.', 'dizzy-ticket-manager'));
         return $code;
@@ -227,8 +227,8 @@ final class TicketSalesAdmin
         exit;
     }
 
-    private function guard(): void
+    private function guard(string $capability = 'manage_options'): void
     {
-        if (! current_user_can('manage_options')) wp_die(esc_html__('Unauthorized', 'dizzy-ticket-manager'));
+        if (! current_user_can($capability)) wp_die(esc_html__('Unauthorized', 'dizzy-ticket-manager'));
     }
 }
