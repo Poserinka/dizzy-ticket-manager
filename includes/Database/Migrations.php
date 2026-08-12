@@ -8,7 +8,7 @@ defined('ABSPATH') || exit;
 
 final class Migrations
 {
-    private const VERSION = '1.0.0';
+    private const VERSION = '1.1.0';
 
     public static function run(): void
     {
@@ -56,6 +56,7 @@ final class Migrations
             currency char(3) NOT NULL DEFAULT 'EUR',
             expires_at datetime NOT NULL,
             paid_at datetime NULL,
+            confirmation_sent_at datetime NULL,
             created_at datetime NOT NULL,
             updated_at datetime NOT NULL,
             PRIMARY KEY  (id),
