@@ -420,6 +420,21 @@ final class TicketSalesRepository
         return $updated === 1 ? 'checked_in' : 'already_checked_in';
     }
 
+    public function claimConfirmationEmail(int $orderId): bool
+    {
+        global $wpdb;
+
+        return $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$this->orders}
+                SET confirmation_sent_at=%s
+                WHERE id=%d AND status='paid' AND confirmation_sent_at IS NULL",
+                current_time('mysql', true),
+                $orderId
+            )
+        ) === 1;
+    }
+
     public function allOrders(): array
     {
         global $wpdb;
