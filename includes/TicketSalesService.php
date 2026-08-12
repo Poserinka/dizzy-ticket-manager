@@ -110,7 +110,9 @@ final class TicketSalesService
             ($order['status'] ?? '') === 'paid'
             && $this->repository->claimConfirmationEmail((int) $order['id'])
         ) {
-            $this->sendTickets($order);
+            if (! $this->sendTickets($order)) {
+                $this->repository->releaseConfirmationEmail((int) $order['id']);
+            }
         }
 
         return $order;
@@ -131,7 +133,7 @@ final class TicketSalesService
         return $this->synchronize((string) $payment['provider_payment_id']) ?? $order;
     }
 
-    private function sendTickets(array $order): void
+    private function sendTickets(array $order): bool
     {
         global $wpdb;
 
@@ -163,7 +165,7 @@ final class TicketSalesService
         $eventTime = $timestamp !== false ? wp_date('H:i', $timestamp, wp_timezone()) : '';
         $ticketCount = count($tickets);
 
-        $this->mailer->sendTemplate(
+        return $this->mailer->sendTemplate(
             (string) $order['customer_email'],
             __('Your event tickets', 'dizzy-ticket-manager'),
             'ticket-confirmed',
