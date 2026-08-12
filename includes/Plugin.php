@@ -17,6 +17,7 @@ final class Plugin
         }
 
         self::$booted = true;
+        (new ControllerRole())->register();
         $events = new EventGateway();
 
         if (! $events->available()) {
