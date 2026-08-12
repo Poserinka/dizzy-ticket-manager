@@ -1,13 +1,13 @@
 <?php
 /**
- * Plugin Name: Dizzy Reservations Manager
- * Plugin URI: https://github.com/Poserinka/dizzy-reservations-manager
- * Description: Reservations, Mollie iDEAL ticket sales, QR tickets and check-in for Dizzy Events Manager.
- * Version: 2.3.7
+ * Plugin Name: Dizzy Ticket Manager
+ * Plugin URI: https://github.com/Poserinka/dizzy-ticket-manager
+ * Description: Event ticket sales, Mollie iDEAL payments, QR tickets and check-in for Dizzy Events Manager.
+ * Version: 1.0.0
  * Author: Poserinka Design
- * Text Domain: dizzy-reservations-manager
+ * Text Domain: dizzy-ticket-manager
  * Requires PHP: 8.2
- * Update URI: https://github.com/Poserinka/dizzy-reservations-manager
+ * Update URI: https://github.com/Poserinka/dizzy-ticket-manager
  * Requires Plugins: dizzy-events-manager
  */
 
@@ -15,22 +15,22 @@ declare(strict_types=1);
 
 defined('ABSPATH') || exit;
 
-define('DIZZY_RESERVATIONS_VERSION', '2.3.7');
-define('DIZZY_RESERVATIONS_PATH', plugin_dir_path(__FILE__));
+define('DIZZY_TICKETS_VERSION', '1.0.0');
+define('DIZZY_TICKETS_PATH', plugin_dir_path(__FILE__));
 
-require_once DIZZY_RESERVATIONS_PATH . 'includes/Autoloader.php';
-\Dizzy\Reservations\Autoloader::register();
+require_once DIZZY_TICKETS_PATH . 'includes/Autoloader.php';
+\Dizzy\Tickets\Autoloader::register();
 
-(new \Dizzy\Reservations\GitHubUpdater(
+(new \Dizzy\Tickets\GitHubUpdater(
     __FILE__,
-    'dizzy-reservations-manager',
-    'Poserinka/dizzy-reservations-manager',
-    DIZZY_RESERVATIONS_VERSION
+    'dizzy-ticket-manager',
+    'Poserinka/dizzy-ticket-manager',
+    DIZZY_TICKETS_VERSION
 ))->register();
 
-register_activation_hook(__FILE__, [\Dizzy\Reservations\Database\Migrations::class, 'run']);
+register_activation_hook(__FILE__, [\Dizzy\Tickets\Database\Migrations::class, 'run']);
 
 add_action('init', static function (): void {
-    \Dizzy\Reservations\Database\Migrations::run();
-    (new \Dizzy\Reservations\Plugin())->boot();
+    \Dizzy\Tickets\Database\Migrations::run();
+    (new \Dizzy\Tickets\Plugin())->boot();
 }, 20);

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dizzy\Reservations;
+namespace Dizzy\Tickets;
 
 defined('ABSPATH') || exit;
 

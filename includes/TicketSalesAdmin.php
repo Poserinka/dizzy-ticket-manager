@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dizzy\Reservations;
+namespace Dizzy\Tickets;
 
 use Throwable;
 
@@ -10,7 +10,7 @@ defined('ABSPATH') || exit;
 
 final class TicketSalesAdmin
 {
-    private const MENU = 'dizzy-reservations';
+    private const MENU = 'dizzy-tickets';
 
     public function __construct(
         private TicketSalesRepository $repository,
@@ -26,21 +26,31 @@ final class TicketSalesAdmin
 
     public function menu(): void
     {
+        add_menu_page(
+            __('Tickets', 'dizzy-ticket-manager'),
+            __('Tickets', 'dizzy-ticket-manager'),
+            'manage_options',
+            self::MENU,
+            [$this, 'ordersPage'],
+            'dashicons-tickets-alt',
+            26
+        );
+
         add_submenu_page(
             self::MENU,
-            __('Ticket Orders', 'dizzy-reservations-manager'),
-            __('Ticket Orders', 'dizzy-reservations-manager'),
+            __('Tickets', 'dizzy-ticket-manager'),
+            __('Tickets', 'dizzy-ticket-manager'),
             'manage_options',
-            'dizzy-ticket-orders',
+            self::MENU,
             [$this, 'ordersPage']
         );
 
         add_submenu_page(
             self::MENU,
-            __('Payment Settings', 'dizzy-reservations-manager'),
-            __('Payment Settings', 'dizzy-reservations-manager'),
+            __('Payment Settings', 'dizzy-ticket-manager'),
+            __('Payment Settings', 'dizzy-ticket-manager'),
             'manage_options',
-            'dizzy-payment-settings',
+            'dizzy-ticket-payment-settings',
             [$this, 'settingsPage']
         );
     }
@@ -48,12 +58,12 @@ final class TicketSalesAdmin
     public function settings(): void
     {
         register_setting(
-            'dizzy_payment_settings',
-            'dizzy_mollie_api_key',
+            'dizzy_ticket_payment_settings',
+            'dizzy_ticket_mollie_api_key',
             ['type' => 'string', 'sanitize_callback' => [$this, 'sanitizeApiKey'], 'default' => '']
         );
         register_setting(
-            'dizzy_payment_settings',
+            'dizzy_ticket_payment_settings',
             'dizzy_ticket_hold_minutes',
             ['type' => 'integer', 'sanitize_callback' => static fn ($value): int => min(60, max(5, absint($value))), 'default' => 15]
         );
@@ -67,7 +77,7 @@ final class TicketSalesAdmin
             return '';
         }
 
-        return preg_match('/^(test|live)_[A-Za-z0-9]+$/', $value) ? $value : (string) get_option('dizzy_mollie_api_key', '');
+        return preg_match('/^(test|live)_[A-Za-z0-9]+$/', $value) ? $value : (string) get_option('dizzy_ticket_mollie_api_key', '');
     }
 
     public function settingsPage(): void
@@ -75,24 +85,24 @@ final class TicketSalesAdmin
         $this->guard();
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e('Payment Settings', 'dizzy-reservations-manager'); ?></h1>
+            <h1><?php esc_html_e('Payment Settings', 'dizzy-ticket-manager'); ?></h1>
             <form method="post" action="options.php">
-                <?php settings_fields('dizzy_payment_settings'); ?>
+                <?php settings_fields('dizzy_ticket_payment_settings'); ?>
                 <table class="form-table">
                     <tr>
-                        <th><label for="dizzy-mollie-key"><?php esc_html_e('Mollie API key', 'dizzy-reservations-manager'); ?></label></th>
+                        <th><label for="dizzy-mollie-key"><?php esc_html_e('Mollie API key', 'dizzy-ticket-manager'); ?></label></th>
                         <td>
-                            <input id="dizzy-mollie-key" type="password" class="regular-text" name="dizzy_mollie_api_key" value="<?php echo esc_attr((string) get_option('dizzy_mollie_api_key', '')); ?>" autocomplete="new-password">
-                            <p class="description"><?php esc_html_e('Start with a Mollie test_ key. Replace it with a live_ key only after testing.', 'dizzy-reservations-manager'); ?></p>
+                            <input id="dizzy-mollie-key" type="password" class="regular-text" name="dizzy_ticket_mollie_api_key" value="<?php echo esc_attr((string) get_option('dizzy_ticket_mollie_api_key', '')); ?>" autocomplete="new-password">
+                            <p class="description"><?php esc_html_e('Start with a Mollie test_ key. Replace it with a live_ key only after testing.', 'dizzy-ticket-manager'); ?></p>
                         </td>
                     </tr>
                     <tr>
-                        <th><label for="dizzy-hold-minutes"><?php esc_html_e('Ticket hold time', 'dizzy-reservations-manager'); ?></label></th>
-                        <td><input id="dizzy-hold-minutes" type="number" min="5" max="60" name="dizzy_ticket_hold_minutes" value="<?php echo esc_attr((string) get_option('dizzy_ticket_hold_minutes', 15)); ?>"> <?php esc_html_e('minutes', 'dizzy-reservations-manager'); ?></td>
+                        <th><label for="dizzy-hold-minutes"><?php esc_html_e('Ticket hold time', 'dizzy-ticket-manager'); ?></label></th>
+                        <td><input id="dizzy-hold-minutes" type="number" min="5" max="60" name="dizzy_ticket_hold_minutes" value="<?php echo esc_attr((string) get_option('dizzy_ticket_hold_minutes', 15)); ?>"> <?php esc_html_e('minutes', 'dizzy-ticket-manager'); ?></td>
                     </tr>
                     <tr>
-                        <th><?php esc_html_e('Mollie webhook URL', 'dizzy-reservations-manager'); ?></th>
-                        <td><code><?php echo esc_html(rest_url('dizzy-reservations/v1/mollie/webhook')); ?></code></td>
+                        <th><?php esc_html_e('Mollie webhook URL', 'dizzy-ticket-manager'); ?></th>
+                        <td><code><?php echo esc_html(rest_url('dizzy-tickets/v1/mollie/webhook')); ?></code></td>
                     </tr>
                 </table>
                 <?php submit_button(); ?>
@@ -108,14 +118,14 @@ final class TicketSalesAdmin
         $edit = $editId > 0 ? $this->repository->findType($editId) : null;
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e('Ticket Types', 'dizzy-reservations-manager'); ?></h1>
-            <h2><?php echo esc_html($edit ? __('Edit Ticket Type', 'dizzy-reservations-manager') : __('Add Ticket Type', 'dizzy-reservations-manager')); ?></h2>
+            <h1><?php esc_html_e('Ticket Types', 'dizzy-ticket-manager'); ?></h1>
+            <h2><?php echo esc_html($edit ? __('Edit Ticket Type', 'dizzy-ticket-manager') : __('Add Ticket Type', 'dizzy-ticket-manager')); ?></h2>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="dizzy_save_ticket_type">
                 <input type="hidden" name="ticket_type_id" value="<?php echo esc_attr((string) ($edit['id'] ?? 0)); ?>">
                 <?php wp_nonce_field('dizzy_save_ticket_type'); ?>
                 <table class="form-table">
-                    <tr><th><label for="dizzy-occurrence"><?php esc_html_e('Event', 'dizzy-reservations-manager'); ?></label></th><td>
+                    <tr><th><label for="dizzy-occurrence"><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></label></th><td>
                         <select id="dizzy-occurrence" name="occurrence" required>
                             <?php foreach ($this->events->allUpcoming() as $event) : ?>
                                 <?php $value = (int) $event['event_id'] . ':' . (int) $event['id']; ?>
@@ -125,26 +135,26 @@ final class TicketSalesAdmin
                             <?php endforeach; ?>
                         </select>
                     </td></tr>
-                    <tr><th><label for="dizzy-ticket-name"><?php esc_html_e('Name', 'dizzy-reservations-manager'); ?></label></th><td><input id="dizzy-ticket-name" class="regular-text" name="name" required value="<?php echo esc_attr((string) ($edit['name'] ?? 'Standard')); ?>"></td></tr>
-                    <tr><th><label for="dizzy-ticket-price"><?php esc_html_e('Price', 'dizzy-reservations-manager'); ?></label></th><td>€ <input id="dizzy-ticket-price" name="price" inputmode="decimal" required value="<?php echo esc_attr((string) ($edit['price'] ?? '0.00')); ?>"></td></tr>
-                    <tr><th><label for="dizzy-ticket-capacity"><?php esc_html_e('Capacity', 'dizzy-reservations-manager'); ?></label></th><td><input id="dizzy-ticket-capacity" type="number" min="0" name="capacity" value="<?php echo esc_attr((string) ($edit['capacity'] ?? 0)); ?>"><p class="description"><?php esc_html_e('Use 0 for unlimited.', 'dizzy-reservations-manager'); ?></p></td></tr>
-                    <tr><th><?php esc_html_e('Active', 'dizzy-reservations-manager'); ?></th><td><label><input type="checkbox" name="active" value="1" <?php checked((int) ($edit['active'] ?? 1), 1); ?>> <?php esc_html_e('Available for sale', 'dizzy-reservations-manager'); ?></label></td></tr>
+                    <tr><th><label for="dizzy-ticket-name"><?php esc_html_e('Name', 'dizzy-ticket-manager'); ?></label></th><td><input id="dizzy-ticket-name" class="regular-text" name="name" required value="<?php echo esc_attr((string) ($edit['name'] ?? 'Standard')); ?>"></td></tr>
+                    <tr><th><label for="dizzy-ticket-price"><?php esc_html_e('Price', 'dizzy-ticket-manager'); ?></label></th><td>€ <input id="dizzy-ticket-price" name="price" inputmode="decimal" required value="<?php echo esc_attr((string) ($edit['price'] ?? '0.00')); ?>"></td></tr>
+                    <tr><th><label for="dizzy-ticket-capacity"><?php esc_html_e('Capacity', 'dizzy-ticket-manager'); ?></label></th><td><input id="dizzy-ticket-capacity" type="number" min="0" name="capacity" value="<?php echo esc_attr((string) ($edit['capacity'] ?? 0)); ?>"><p class="description"><?php esc_html_e('Use 0 for unlimited.', 'dizzy-ticket-manager'); ?></p></td></tr>
+                    <tr><th><?php esc_html_e('Active', 'dizzy-ticket-manager'); ?></th><td><label><input type="checkbox" name="active" value="1" <?php checked((int) ($edit['active'] ?? 1), 1); ?>> <?php esc_html_e('Available for sale', 'dizzy-ticket-manager'); ?></label></td></tr>
                 </table>
-                <?php submit_button($edit ? __('Update Ticket Type', 'dizzy-reservations-manager') : __('Add Ticket Type', 'dizzy-reservations-manager')); ?>
+                <?php submit_button($edit ? __('Update Ticket Type', 'dizzy-ticket-manager') : __('Add Ticket Type', 'dizzy-ticket-manager')); ?>
             </form>
 
-            <h2><?php esc_html_e('Existing Ticket Types', 'dizzy-reservations-manager'); ?></h2>
+            <h2><?php esc_html_e('Existing Ticket Types', 'dizzy-ticket-manager'); ?></h2>
             <table class="widefat striped">
-                <thead><tr><th><?php esc_html_e('Event', 'dizzy-reservations-manager'); ?></th><th><?php esc_html_e('Name', 'dizzy-reservations-manager'); ?></th><th><?php esc_html_e('Price', 'dizzy-reservations-manager'); ?></th><th><?php esc_html_e('Capacity', 'dizzy-reservations-manager'); ?></th><th><?php esc_html_e('Status', 'dizzy-reservations-manager'); ?></th><th></th></tr></thead>
+                <thead><tr><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Name', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Price', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Capacity', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Status', 'dizzy-ticket-manager'); ?></th><th></th></tr></thead>
                 <tbody>
                     <?php foreach ($this->repository->allTypes() as $type) : ?>
                         <tr>
                             <td><?php echo esc_html(get_the_title((int) $type['event_id'])); ?></td>
                             <td><?php echo esc_html((string) $type['name']); ?></td>
                             <td>€ <?php echo esc_html((string) $type['price']); ?></td>
-                            <td><?php echo esc_html((string) ($type['capacity'] ?: __('Unlimited', 'dizzy-reservations-manager'))); ?></td>
-                            <td><?php echo esc_html((int) $type['active'] === 1 ? __('Active', 'dizzy-reservations-manager') : __('Inactive', 'dizzy-reservations-manager')); ?></td>
-                            <td><a href="<?php echo esc_url(admin_url('admin.php?page=dizzy-ticket-types&edit_type=' . (int) $type['id'])); ?>"><?php esc_html_e('Edit', 'dizzy-reservations-manager'); ?></a></td>
+                            <td><?php echo esc_html((string) ($type['capacity'] ?: __('Unlimited', 'dizzy-ticket-manager'))); ?></td>
+                            <td><?php echo esc_html((int) $type['active'] === 1 ? __('Active', 'dizzy-ticket-manager') : __('Inactive', 'dizzy-ticket-manager')); ?></td>
+                            <td><a href="<?php echo esc_url(admin_url('admin.php?page=dizzy-ticket-types&edit_type=' . (int) $type['id'])); ?>"><?php esc_html_e('Edit', 'dizzy-ticket-manager'); ?></a></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -161,14 +171,14 @@ final class TicketSalesAdmin
         $parts = explode(':', sanitize_text_field(wp_unslash((string) ($_POST['occurrence'] ?? ''))));
 
         if (count($parts) !== 2) {
-            wp_die(esc_html__('Invalid event selection.', 'dizzy-reservations-manager'));
+            wp_die(esc_html__('Invalid event selection.', 'dizzy-ticket-manager'));
         }
 
         $eventId = absint($parts[0]);
         $occurrenceId = absint($parts[1]);
 
         if ($this->events->occurrence($eventId, $occurrenceId) === null) {
-            wp_die(esc_html__('Selected event is unavailable.', 'dizzy-reservations-manager'));
+            wp_die(esc_html__('Selected event is unavailable.', 'dizzy-ticket-manager'));
         }
 
         try {
@@ -194,9 +204,9 @@ final class TicketSalesAdmin
         $this->guard();
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e('Ticket Orders', 'dizzy-reservations-manager'); ?></h1>
+            <h1><?php esc_html_e('Tickets', 'dizzy-ticket-manager'); ?></h1>
             <table class="widefat striped">
-                <thead><tr><th>ID</th><th><?php esc_html_e('Customer', 'dizzy-reservations-manager'); ?></th><th><?php esc_html_e('Event', 'dizzy-reservations-manager'); ?></th><th><?php esc_html_e('Amount', 'dizzy-reservations-manager'); ?></th><th><?php esc_html_e('Status', 'dizzy-reservations-manager'); ?></th><th><?php esc_html_e('Created', 'dizzy-reservations-manager'); ?></th></tr></thead>
+                <thead><tr><th>ID</th><th><?php esc_html_e('Customer', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Amount', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Status', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Created', 'dizzy-ticket-manager'); ?></th></tr></thead>
                 <tbody>
                     <?php foreach ($this->repository->allOrders() as $order) : ?>
                         <tr>
@@ -217,7 +227,7 @@ final class TicketSalesAdmin
     private function guard(): void
     {
         if (! current_user_can('manage_options')) {
-            wp_die(esc_html__('Unauthorized', 'dizzy-reservations-manager'));
+            wp_die(esc_html__('Unauthorized', 'dizzy-ticket-manager'));
         }
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dizzy\Reservations;
+namespace Dizzy\Tickets;
 
 use RuntimeException;
 
@@ -76,7 +76,7 @@ final class TicketSalesService
                 'amount' => ['currency' => $order['currency'], 'value' => $order['total']],
                 'description' => sprintf('Tickets: %s', get_the_title($eventId)),
                 'redirectUrl' => $returnUrl,
-                'webhookUrl' => rest_url('dizzy-reservations/v1/mollie/webhook'),
+                'webhookUrl' => rest_url('dizzy-tickets/v1/mollie/webhook'),
                 'method' => 'ideal',
                 'metadata' => ['order_id' => $order['id']],
             ]);
@@ -134,16 +134,16 @@ final class TicketSalesService
 
         foreach ($this->repository->ticketsForOrder((int) $order['id']) as $ticket) {
             $links[] = '<li><a href="' . esc_url($this->ticketUrl((string) $ticket['ticket_code'])) . '">' .
-                esc_html__('Open ticket', 'dizzy-reservations-manager') .
+                esc_html__('Open ticket', 'dizzy-ticket-manager') .
                 '</a></li>';
         }
 
-        $message = '<p>' . esc_html__('Your payment was received. Your tickets are ready:', 'dizzy-reservations-manager') . '</p><ul>' .
+        $message = '<p>' . esc_html__('Your payment was received. Your tickets are ready:', 'dizzy-ticket-manager') . '</p><ul>' .
             implode('', $links) . '</ul>';
 
         $this->mailer->send(
             (string) $order['customer_email'],
-            __('Your event tickets', 'dizzy-reservations-manager'),
+            __('Your event tickets', 'dizzy-ticket-manager'),
             $message
         );
     }

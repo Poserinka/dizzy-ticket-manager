@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dizzy\Reservations;
+namespace Dizzy\Tickets;
 
 defined('ABSPATH') || exit;
 
@@ -143,7 +143,7 @@ final class GitHubUpdater
             'download_link' => $release['package'],
             'requires_php' => '8.2',
             'sections' => [
-                'description' => esc_html__('Managed through GitHub Releases.', 'dizzy-reservations-manager'),
+                'description' => esc_html__('Managed through GitHub Releases.', 'dizzy-ticket-manager'),
                 'changelog' => wpautop(esc_html($release['body'])),
             ],
         ];

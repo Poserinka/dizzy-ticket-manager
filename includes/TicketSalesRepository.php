@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dizzy\Reservations;
+namespace Dizzy\Tickets;
 
 use RuntimeException;
 use Throwable;
@@ -21,12 +21,12 @@ final class TicketSalesRepository
     public function __construct()
     {
         global $wpdb;
-        $this->types = $wpdb->prefix . 'dizzy_ticket_types';
-        $this->orders = $wpdb->prefix . 'dizzy_ticket_orders';
-        $this->items = $wpdb->prefix . 'dizzy_ticket_order_items';
-        $this->payments = $wpdb->prefix . 'dizzy_ticket_payments';
-        $this->tickets = $wpdb->prefix . 'dizzy_tickets';
-        $this->webhooks = $wpdb->prefix . 'dizzy_payment_webhooks';
+        $this->types = $wpdb->prefix . 'dizzy_tm_ticket_types';
+        $this->orders = $wpdb->prefix . 'dizzy_tm_ticket_orders';
+        $this->items = $wpdb->prefix . 'dizzy_tm_ticket_order_items';
+        $this->payments = $wpdb->prefix . 'dizzy_tm_ticket_payments';
+        $this->tickets = $wpdb->prefix . 'dizzy_tm_tickets';
+        $this->webhooks = $wpdb->prefix . 'dizzy_tm_payment_webhooks';
     }
 
     public function syncFromEvent(int $eventId, int $occurrenceId): void
@@ -35,12 +35,12 @@ final class TicketSalesRepository
 
         $legacyPrice = (string) get_post_meta($eventId, '_dizzy_ticket_price', true);
         $prices = [
-            __('Standard Ticket', 'dizzy-reservations-manager') => (string) get_post_meta($eventId, '_dizzy_standard_ticket_price', true),
-            __('Student Ticket', 'dizzy-reservations-manager') => (string) get_post_meta($eventId, '_dizzy_student_ticket_price', true),
+            __('Standard Ticket', 'dizzy-ticket-manager') => (string) get_post_meta($eventId, '_dizzy_standard_ticket_price', true),
+            __('Student Ticket', 'dizzy-ticket-manager') => (string) get_post_meta($eventId, '_dizzy_student_ticket_price', true),
         ];
 
-        if (trim($prices[__('Standard Ticket', 'dizzy-reservations-manager')]) === '') {
-            $prices[__('Standard Ticket', 'dizzy-reservations-manager')] = $legacyPrice;
+        if (trim($prices[__('Standard Ticket', 'dizzy-ticket-manager')]) === '') {
+            $prices[__('Standard Ticket', 'dizzy-ticket-manager')] = $legacyPrice;
         }
 
         $capacity = absint(get_post_meta($eventId, '_dizzy_capacity', true));
@@ -56,7 +56,7 @@ final class TicketSalesRepository
                 )
             );
 
-            if ($existingId === 0 && $name === __('Standard Ticket', 'dizzy-reservations-manager')) {
+            if ($existingId === 0 && $name === __('Standard Ticket', 'dizzy-ticket-manager')) {
                 $existingId = (int) $wpdb->get_var(
                     $wpdb->prepare("SELECT id FROM {$this->types} WHERE event_id=%d ORDER BY id LIMIT 1", $eventId)
                 );

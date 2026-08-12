@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dizzy\Reservations;
+namespace Dizzy\Tickets;
 
 use Throwable;
 use WP_REST_Request;
@@ -30,7 +30,7 @@ final class TicketSalesController
     public function routes(): void
     {
         register_rest_route(
-            'dizzy-reservations/v1',
+            'dizzy-tickets/v1',
             '/mollie/webhook',
             [
                 'methods' => 'POST',
@@ -61,7 +61,7 @@ final class TicketSalesController
         }
 
         if ($occurrences === []) {
-            return '<p>' . esc_html__('No ticket sales date is available for this event.', 'dizzy-reservations-manager') . '</p>';
+            return '<p>' . esc_html__('No ticket sales date is available for this event.', 'dizzy-ticket-manager') . '</p>';
         }
 
         $this->repository->syncFromEvent($eventId, (int) $occurrences[0]['id']);
@@ -88,7 +88,7 @@ final class TicketSalesController
         }
 
         if ($types === []) {
-            echo '<p>' . esc_html__('No tickets are currently available for this event.', 'dizzy-reservations-manager') . '</p>';
+            echo '<p>' . esc_html__('No tickets are currently available for this event.', 'dizzy-ticket-manager') . '</p>';
             return (string) ob_get_clean();
         }
         ?>
@@ -99,7 +99,7 @@ final class TicketSalesController
             <input type="hidden" name="return_url" value="<?php echo esc_url((string) get_permalink()); ?>">
 
             <p>
-                <label><?php esc_html_e('Ticket', 'dizzy-reservations-manager'); ?><br>
+                <label><?php esc_html_e('Ticket', 'dizzy-ticket-manager'); ?><br>
                     <select name="ticket_type_id" required>
                         <?php foreach ($types as $type) : ?>
                             <option value="<?php echo esc_attr((string) $type['id']); ?>">
@@ -117,11 +117,11 @@ final class TicketSalesController
                     </select>
                 </label>
             </p>
-            <p><label><?php esc_html_e('Quantity', 'dizzy-reservations-manager'); ?><br><input type="number" name="quantity" min="1" max="20" value="1" required></label></p>
-            <p><label><?php esc_html_e('Name', 'dizzy-reservations-manager'); ?><br><input name="name" required autocomplete="name"></label></p>
-            <p><label><?php esc_html_e('Email', 'dizzy-reservations-manager'); ?><br><input type="email" name="email" required autocomplete="email"></label></p>
-            <p><label><?php esc_html_e('Phone', 'dizzy-reservations-manager'); ?><br><input name="phone" autocomplete="tel"></label></p>
-            <button type="submit"><?php esc_html_e('Pay with iDEAL', 'dizzy-reservations-manager'); ?></button>
+            <p><label><?php esc_html_e('Quantity', 'dizzy-ticket-manager'); ?><br><input type="number" name="quantity" min="1" max="20" value="1" required></label></p>
+            <p><label><?php esc_html_e('Name', 'dizzy-ticket-manager'); ?><br><input name="name" required autocomplete="name"></label></p>
+            <p><label><?php esc_html_e('Email', 'dizzy-ticket-manager'); ?><br><input type="email" name="email" required autocomplete="email"></label></p>
+            <p><label><?php esc_html_e('Phone', 'dizzy-ticket-manager'); ?><br><input name="phone" autocomplete="tel"></label></p>
+            <button type="submit"><?php esc_html_e('Pay with iDEAL', 'dizzy-ticket-manager'); ?></button>
         </form>
         <?php
 
@@ -140,7 +140,7 @@ final class TicketSalesController
         $nonce = sanitize_text_field(wp_unslash((string) ($_POST['dizzy_ticket_nonce'] ?? '')));
 
         if (! wp_verify_nonce($nonce, 'dizzy_ticket_purchase')) {
-            wp_die(esc_html__('Invalid ticket checkout request.', 'dizzy-reservations-manager'), '', ['response' => 403]);
+            wp_die(esc_html__('Invalid ticket checkout request.', 'dizzy-ticket-manager'), '', ['response' => 403]);
         }
 
         try {
@@ -160,7 +160,7 @@ final class TicketSalesController
         } catch (Throwable $exception) {
             error_log('Dizzy ticket checkout failed: ' . $exception->getMessage());
             wp_die(
-                esc_html__('Ticket checkout could not be started: ', 'dizzy-reservations-manager') .
+                esc_html__('Ticket checkout could not be started: ', 'dizzy-ticket-manager') .
                 esc_html($exception->getMessage()),
                 '',
                 ['response' => 400]
@@ -199,7 +199,7 @@ final class TicketSalesController
 
         if ($ticket === null || ($ticket['status'] ?? '') !== 'valid') {
             status_header(404);
-            wp_die(esc_html__('Invalid ticket.', 'dizzy-reservations-manager'));
+            wp_die(esc_html__('Invalid ticket.', 'dizzy-ticket-manager'));
         }
 
         $checkinResult = '';
@@ -225,25 +225,25 @@ final class TicketSalesController
         <head>
             <meta charset="<?php bloginfo('charset'); ?>">
             <meta name="viewport" content="width=device-width">
-            <title><?php esc_html_e('Event Ticket', 'dizzy-reservations-manager'); ?></title>
+            <title><?php esc_html_e('Event Ticket', 'dizzy-ticket-manager'); ?></title>
         </head>
         <body style="font-family:sans-serif;max-width:640px;margin:40px auto;padding:24px;text-align:center">
-            <h1><?php esc_html_e('Event Ticket', 'dizzy-reservations-manager'); ?></h1>
+            <h1><?php esc_html_e('Event Ticket', 'dizzy-ticket-manager'); ?></h1>
             <h2><?php echo esc_html(get_the_title((int) $ticket['event_id'])); ?></h2>
             <p><?php echo esc_html((string) $ticket['holder_name']); ?></p>
-            <img src="<?php echo esc_url($qr); ?>" width="280" height="280" alt="<?php esc_attr_e('Ticket QR code', 'dizzy-reservations-manager'); ?>">
+            <img src="<?php echo esc_url($qr); ?>" width="280" height="280" alt="<?php esc_attr_e('Ticket QR code', 'dizzy-ticket-manager'); ?>">
             <p><code><?php echo esc_html(strtoupper(substr($code, 0, 12))); ?></code></p>
             <?php if ($checkinResult !== '') : ?>
                 <p><strong><?php echo esc_html(
                     $checkinResult === 'checked_in'
-                        ? __('Check-in completed.', 'dizzy-reservations-manager')
-                        : __('Ticket was already checked in or is invalid.', 'dizzy-reservations-manager')
+                        ? __('Check-in completed.', 'dizzy-ticket-manager')
+                        : __('Ticket was already checked in or is invalid.', 'dizzy-ticket-manager')
                 ); ?></strong></p>
             <?php elseif (! empty($ticket['checked_in_at'])) : ?>
-                <p><strong><?php esc_html_e('Checked in', 'dizzy-reservations-manager'); ?></strong></p>
+                <p><strong><?php esc_html_e('Checked in', 'dizzy-ticket-manager'); ?></strong></p>
             <?php endif; ?>
             <?php if ($checkinResult !== '') : ?>
-                <p><a href="<?php echo esc_url(admin_url('admin.php?page=dizzy-reservations-checkin')); ?>" style="display:inline-block;background:#2271b1;color:#fff;padding:11px 18px;text-decoration:none"><?php esc_html_e('Return to Check-in', 'dizzy-reservations-manager'); ?></a></p>
+                <p><a href="<?php echo esc_url(admin_url('admin.php?page=dizzy-reservations-checkin')); ?>" style="display:inline-block;background:#2271b1;color:#fff;padding:11px 18px;text-decoration:none"><?php esc_html_e('Return to Check-in', 'dizzy-ticket-manager'); ?></a></p>
             <?php endif; ?>
         </body>
         </html>
@@ -257,12 +257,12 @@ final class TicketSalesController
 
         if ($status === 'paid') {
             echo '<div class="dizzy-ticket-success"><p><strong>' .
-                esc_html__('Payment received. Your tickets are ready.', 'dizzy-reservations-manager') .
+                esc_html__('Payment received. Your tickets are ready.', 'dizzy-ticket-manager') .
                 '</strong></p><ul>';
 
             foreach ($this->repository->ticketsForOrder((int) $order['id']) as $ticket) {
                 echo '<li><a href="' . esc_url($this->service->ticketUrl((string) $ticket['ticket_code'])) . '">' .
-                    esc_html__('Open ticket', 'dizzy-reservations-manager') .
+                    esc_html__('Open ticket', 'dizzy-ticket-manager') .
                     '</a></li>';
             }
 
@@ -272,11 +272,11 @@ final class TicketSalesController
 
         if (in_array($status, ['failed', 'canceled', 'expired'], true)) {
             echo '<p class="dizzy-ticket-error">' .
-                esc_html__('The payment was not completed.', 'dizzy-reservations-manager') .
+                esc_html__('The payment was not completed.', 'dizzy-ticket-manager') .
                 '</p>';
             return;
         }
 
-        echo '<p>' . esc_html__('Your payment is being processed. Refresh this page shortly.', 'dizzy-reservations-manager') . '</p>';
+        echo '<p>' . esc_html__('Your payment is being processed. Refresh this page shortly.', 'dizzy-ticket-manager') . '</p>';
     }
 }

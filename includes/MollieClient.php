@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dizzy\Reservations;
+namespace Dizzy\Tickets;
 
 use RuntimeException;
 
@@ -83,7 +83,7 @@ final class MollieClient
 
     private function apiKey(): string
     {
-        $key = trim((string) get_option('dizzy_mollie_api_key', ''));
+        $key = trim((string) get_option('dizzy_ticket_mollie_api_key', ''));
 
         return preg_match('/^(test|live)_[A-Za-z0-9]+$/', $key) ? $key : '';
     }
