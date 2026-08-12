@@ -226,7 +226,11 @@ final class TicketSalesController
             ? wp_date(get_option('date_format') . ' – ' . get_option('time_format'), $timestamp, wp_timezone())
             : $start;
         $url = $this->service->ticketUrl($code);
-        $qr = 'https://api.qrserver.com/v1/create-qr-code/?size=560x560&margin=24&data=' . rawurlencode($url);
+        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=560x560&margin=24&data=' . rawurlencode($url);
+        $qrResponse = wp_remote_get($qrUrl, ['timeout' => 15]);
+        $qr = ! is_wp_error($qrResponse) && wp_remote_retrieve_response_code($qrResponse) === 200
+            ? 'data:image/png;base64,' . base64_encode(wp_remote_retrieve_body($qrResponse))
+            : $qrUrl;
         $shortCode = strtoupper(substr($code, 0, 12));
         $eventName = get_the_title((int) $ticket['event_id']);
         $holder = (string) $ticket['holder_name'];
