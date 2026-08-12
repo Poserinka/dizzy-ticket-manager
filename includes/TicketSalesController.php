@@ -207,16 +207,32 @@ final class TicketSalesController
             ? sanitize_text_field(wp_unslash((string) $_GET['checkin_nonce']))
             : '';
 
-        if (
-            current_user_can('manage_options')
-            && wp_verify_nonce($checkinNonce, 'dizzy_ticket_qr_checkin')
-        ) {
+        if (current_user_can('manage_options') && wp_verify_nonce($checkinNonce, 'dizzy_ticket_qr_checkin')) {
             $checkinResult = $this->repository->checkInTicket($code, get_current_user_id());
             $ticket = $this->repository->ticketByCode($code) ?? $ticket;
         }
 
+        global $wpdb;
+        $ticketName = (string) $wpdb->get_var($wpdb->prepare(
+            "SELECT ticket_name FROM {$wpdb->prefix}dizzy_tm_ticket_order_items WHERE id=%d LIMIT 1",
+            (int) $ticket['order_item_id']
+        ));
+        $start = (string) $wpdb->get_var($wpdb->prepare(
+            "SELECT start_datetime FROM {$wpdb->prefix}dizzy_event_occurrences WHERE id=%d LIMIT 1",
+            (int) $ticket['occurrence_id']
+        ));
+        $timestamp = $start !== '' ? strtotime($start) : false;
+        $date = $timestamp !== false
+            ? wp_date(get_option('date_format') . ' – ' . get_option('time_format'), $timestamp, wp_timezone())
+            : $start;
         $url = $this->service->ticketUrl($code);
-        $qr = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=' . rawurlencode($url);
+        $qr = 'https://api.qrserver.com/v1/create-qr-code/?size=560x560&margin=24&data=' . rawurlencode($url);
+        $shortCode = strtoupper(substr($code, 0, 12));
+        $eventName = get_the_title((int) $ticket['event_id']);
+        $holder = (string) $ticket['holder_name'];
+        $type = $ticketName !== '' ? $ticketName : __('Event Ticket', 'dizzy-ticket-manager');
+        $filename = sanitize_file_name($eventName . '-' . substr($code, 0, 8) . '-ticket.jpg');
+
         status_header(200);
         nocache_headers();
         ?>
@@ -224,27 +240,37 @@ final class TicketSalesController
         <html <?php language_attributes(); ?>>
         <head>
             <meta charset="<?php bloginfo('charset'); ?>">
-            <meta name="viewport" content="width=device-width">
-            <title><?php esc_html_e('Event Ticket', 'dizzy-ticket-manager'); ?></title>
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <title><?php esc_html_e('Your Ticket', 'dizzy-ticket-manager'); ?></title>
+            <style>
+                *{box-sizing:border-box}body{align-items:center;background:#101010;color:#fff;display:flex;font-family:Arial,Helvetica,sans-serif;justify-content:center;margin:0;min-height:100vh;padding:24px;text-align:center}.dizzy-ticket-page{background:#191919;max-width:720px;padding:46px 38px;width:100%}h1{font-size:42px;margin:0 0 28px}h2{font-size:28px;margin:0 0 28px}.dizzy-ticket-date{font-size:16px;margin:0 0 24px}.dizzy-ticket-qr{background:#fff;height:auto;max-width:280px;padding:12px;width:72%}.dizzy-ticket-meta{line-height:1.7;margin:24px 0}.dizzy-ticket-note{margin:22px 0}.dizzy-ticket-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:26px}.dizzy-ticket-actions button,.dizzy-ticket-actions a{border:1px solid #fff;border-radius:0;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:1.2px;padding:16px 24px;text-decoration:none;text-transform:uppercase}.dizzy-ticket-save{background:#fff;color:#050505}.dizzy-ticket-back{background:transparent;color:#fff}.dizzy-ticket-checkin{background:#222;margin:0 0 24px;padding:14px}@media(max-width:600px){body{padding:0}.dizzy-ticket-page{min-height:100vh;padding:42px 18px}h1{font-size:34px}.dizzy-ticket-actions>*{width:100%}}
+            </style>
         </head>
-        <body style="font-family:sans-serif;max-width:640px;margin:40px auto;padding:24px;text-align:center">
-            <h1><?php esc_html_e('Event Ticket', 'dizzy-ticket-manager'); ?></h1>
-            <h2><?php echo esc_html(get_the_title((int) $ticket['event_id'])); ?></h2>
-            <p><?php echo esc_html((string) $ticket['holder_name']); ?></p>
-            <img src="<?php echo esc_url($qr); ?>" width="280" height="280" alt="<?php esc_attr_e('Ticket QR code', 'dizzy-ticket-manager'); ?>">
-            <p><code><?php echo esc_html(strtoupper(substr($code, 0, 12))); ?></code></p>
-            <?php if ($checkinResult !== '') : ?>
-                <p><strong><?php echo esc_html(
-                    $checkinResult === 'checked_in'
-                        ? __('Check-in completed.', 'dizzy-ticket-manager')
-                        : __('Ticket was already checked in or is invalid.', 'dizzy-ticket-manager')
-                ); ?></strong></p>
-            <?php elseif (! empty($ticket['checked_in_at'])) : ?>
-                <p><strong><?php esc_html_e('Checked in', 'dizzy-ticket-manager'); ?></strong></p>
-            <?php endif; ?>
-            <?php if ($checkinResult !== '') : ?>
-                <p><a href="<?php echo esc_url(admin_url('admin.php?page=dizzy-ticket-checkin')); ?>" style="display:inline-block;background:#2271b1;color:#fff;padding:11px 18px;text-decoration:none"><?php esc_html_e('Return to Check-in', 'dizzy-ticket-manager'); ?></a></p>
-            <?php endif; ?>
+        <body>
+            <main class="dizzy-ticket-page">
+                <?php if ($checkinResult !== '') : ?>
+                    <div class="dizzy-ticket-checkin"><strong><?php echo esc_html($checkinResult === 'checked_in' ? __('Check-in completed.', 'dizzy-ticket-manager') : __('Ticket was already checked in or is invalid.', 'dizzy-ticket-manager')); ?></strong></div>
+                <?php elseif (! empty($ticket['checked_in_at'])) : ?>
+                    <div class="dizzy-ticket-checkin"><strong><?php esc_html_e('Checked in', 'dizzy-ticket-manager'); ?></strong></div>
+                <?php endif; ?>
+                <h1><?php esc_html_e('Your Ticket', 'dizzy-ticket-manager'); ?></h1>
+                <h2><?php echo esc_html($eventName); ?></h2>
+                <p class="dizzy-ticket-date"><?php echo esc_html($date); ?></p>
+                <img id="dizzy-ticket-qr" class="dizzy-ticket-qr" src="<?php echo esc_url($qr); ?>" alt="<?php esc_attr_e('Ticket QR code', 'dizzy-ticket-manager'); ?>">
+                <div class="dizzy-ticket-meta"><?php echo esc_html($type . ' · ' . $holder . ' · ' . $shortCode); ?></div>
+                <p class="dizzy-ticket-note"><?php esc_html_e('Present this QR code at the entrance.', 'dizzy-ticket-manager'); ?></p>
+                <div class="dizzy-ticket-actions">
+                    <button type="button" class="dizzy-ticket-save" id="dizzy-save-ticket"><?php esc_html_e('Save Ticket', 'dizzy-ticket-manager'); ?></button>
+                    <?php if ($checkinResult !== '') : ?>
+                        <a class="dizzy-ticket-back" href="<?php echo esc_url(admin_url('admin.php?page=dizzy-ticket-checkin')); ?>"><?php esc_html_e('Return to Check-in', 'dizzy-ticket-manager'); ?></a>
+                    <?php else : ?>
+                        <button type="button" class="dizzy-ticket-back" onclick="history.length>1?history.back():window.close()"><?php esc_html_e('Back', 'dizzy-ticket-manager'); ?></button>
+                    <?php endif; ?>
+                </div>
+            </main>
+            <script>
+            (()=>{const button=document.getElementById('dizzy-save-ticket'),img=document.getElementById('dizzy-ticket-qr');button.addEventListener('click',()=>{if(!img.complete)return;const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1600;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,1080,1600);ctx.fillStyle='#111827';ctx.textAlign='center';ctx.font='700 54px sans-serif';wrap(<?php echo wp_json_encode(strtoupper($eventName)); ?>,540,150,900,68);ctx.font='36px sans-serif';ctx.fillText(<?php echo wp_json_encode($date); ?>,540,300);ctx.drawImage(img,260,390,560,560);ctx.font='700 38px sans-serif';ctx.fillText(<?php echo wp_json_encode($type); ?>,540,1040);ctx.font='32px sans-serif';ctx.fillText(<?php echo wp_json_encode($holder); ?>,540,1110);ctx.font='28px monospace';ctx.fillText(<?php echo wp_json_encode($shortCode); ?>,540,1180);ctx.font='28px sans-serif';ctx.fillText(<?php echo wp_json_encode(__('Present this QR code at the entrance.', 'dizzy-ticket-manager')); ?>,540,1335);const link=document.createElement('a');link.download=<?php echo wp_json_encode($filename); ?>;link.href=canvas.toDataURL('image/jpeg',.95);link.click();function wrap(text,x,y,max,line){let row='';for(const word of String(text).split(/\s+/)){const test=row?row+' '+word:word;if(ctx.measureText(test).width>max&&row){ctx.fillText(row,x,y);row=word;y+=line}else row=test}if(row)ctx.fillText(row,x,y)}})})();
+            </script>
         </body>
         </html>
         <?php
