@@ -435,6 +435,12 @@ final class TicketSalesRepository
         ) === 1;
     }
 
+    public function releaseConfirmationEmail(int $orderId): void
+    {
+        global $wpdb;
+        $wpdb->update($this->orders, ['confirmation_sent_at' => null], ['id' => $orderId]);
+    }
+
     public function allOrders(): array
     {
         global $wpdb;
