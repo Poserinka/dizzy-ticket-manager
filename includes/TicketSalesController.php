@@ -260,7 +260,7 @@ final class TicketSalesController
                 <h1><?php esc_html_e('Your Ticket', 'dizzy-ticket-manager'); ?></h1>
                 <h2><?php echo esc_html($eventName); ?></h2>
                 <p class="dizzy-ticket-date"><?php echo esc_html($date); ?></p>
-                <img id="dizzy-ticket-qr" class="dizzy-ticket-qr" src="<?php echo esc_url($qr); ?>" alt="<?php esc_attr_e('Ticket QR code', 'dizzy-ticket-manager'); ?>">
+                <img id="dizzy-ticket-qr" class="dizzy-ticket-qr" src="<?php echo esc_attr($qr); ?>" alt="<?php esc_attr_e('Ticket QR code', 'dizzy-ticket-manager'); ?>">
                 <div class="dizzy-ticket-meta"><?php echo esc_html($type . ' · ' . $holder . ' · ' . $shortCode); ?></div>
                 <p class="dizzy-ticket-note"><?php esc_html_e('Present this QR code at the entrance.', 'dizzy-ticket-manager'); ?></p>
                 <div class="dizzy-ticket-actions">
