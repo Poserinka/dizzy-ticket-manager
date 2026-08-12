@@ -57,7 +57,7 @@ final class TicketSalesController
             || (is_numeric($studentPrice) && (float) $studentPrice > 0);
 
         if (! $hasPaidTicket) {
-            return do_shortcode('[dizzy_reservation_form event_id="' . $eventId . '"]');
+            return '<p>' . esc_html__('Tickets are not available for this event.', 'dizzy-ticket-manager') . '</p>';
         }
 
         if ($occurrences === []) {
@@ -155,7 +155,7 @@ final class TicketSalesController
                 throw new \RuntimeException('Mollie returned an invalid checkout URL.');
             }
 
-            wp_redirect($checkoutUrl, 303, 'Dizzy Reservations Manager');
+            wp_redirect($checkoutUrl, 303, 'Dizzy Ticket Manager');
             exit;
         } catch (Throwable $exception) {
             error_log('Dizzy ticket checkout failed: ' . $exception->getMessage());
