@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dizzy\Reservations;
+namespace Dizzy\Tickets;
 
 defined('ABSPATH') || exit;
 
@@ -19,14 +19,14 @@ final class ControllerRole
         if ($role === null) {
             add_role(self::ROLE, __('Controller', 'dizzy-ticket-manager'), [
                 'read' => true,
-                self::RESERVATIONS_CAP => true,
+                self::TICKETS_CAP => true,
             ]);
             $role = get_role(self::ROLE);
         }
 
         $role?->add_cap('read');
-        $role?->add_cap(self::RESERVATIONS_CAP);
-        get_role('administrator')?->add_cap(self::RESERVATIONS_CAP);
+        $role?->add_cap(self::TICKETS_CAP);
+        get_role('administrator')?->add_cap(self::TICKETS_CAP);
 
         add_action('admin_menu', [$this, 'limitMenus'], 999);
         add_action('admin_init', [$this, 'redirectDashboard']);
