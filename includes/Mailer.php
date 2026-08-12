@@ -12,7 +12,7 @@ final class Mailer
 {
     public function send(string $email, string $subject, string $message): bool
     {
-        return wp_mail($email, $subject, wp_kses_post($message), ['Content-Type: text/html; charset=UTF-8']);
+        return $this->deliver($email, $subject, wp_kses_post($message));
     }
 
     public function sendTemplate(string $email, string $subject, string $template, array $data): bool
@@ -37,6 +37,27 @@ final class Mailer
         include $path;
         $html = (string) ob_get_clean();
 
-        return wp_mail($email, $subject, $html, ['Content-Type: text/html; charset=UTF-8']);
+        return $this->deliver($email, $subject, $html);
     }
+    private function deliver(string $email, string $subject, string $html): bool
+    {
+        $fromEmail = static fn (string $from): string => 'info@dizzy.nl';
+        $fromName = static fn (string $name): string => 'Jazzcafe Dizzy';
+
+        add_filter('wp_mail_from', $fromEmail);
+        add_filter('wp_mail_from_name', $fromName);
+
+        try {
+            return wp_mail(
+                $email,
+                $subject,
+                $html,
+                ['Content-Type: text/html; charset=UTF-8']
+            );
+        } finally {
+            remove_filter('wp_mail_from', $fromEmail);
+            remove_filter('wp_mail_from_name', $fromName);
+        }
+    }
+
 }
