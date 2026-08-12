@@ -21,7 +21,7 @@ final class TicketSalesController
 
     public function register(): void
     {
-        add_shortcode('dizzy_ticket_checkout', [$this, 'shortcode']);
+        add_shortcode('dizzy_event_ticket_checkout', [$this, 'shortcode']);
         add_action('template_redirect', [$this, 'submit'], 5);
         add_action('template_redirect', [$this, 'renderTicket'], 6);
         add_action('rest_api_init', [$this, 'routes']);
@@ -69,8 +69,8 @@ final class TicketSalesController
 
         ob_start();
 
-        $token = isset($_GET['dizzy_order'])
-            ? sanitize_text_field(wp_unslash((string) $_GET['dizzy_order']))
+        $token = isset($_GET['dizzy_tm_order'])
+            ? sanitize_text_field(wp_unslash((string) $_GET['dizzy_tm_order']))
             : '';
 
         if (preg_match('/^[a-f0-9]{64}$/', $token)) {
@@ -93,8 +93,8 @@ final class TicketSalesController
         }
         ?>
         <form method="post" class="dizzy-ticket-checkout">
-            <?php wp_nonce_field('dizzy_ticket_purchase', 'dizzy_ticket_nonce'); ?>
-            <input type="hidden" name="dizzy_ticket_purchase" value="1">
+            <?php wp_nonce_field('dizzy_tm_ticket_purchase', 'dizzy_tm_ticket_nonce'); ?>
+            <input type="hidden" name="dizzy_tm_ticket_purchase" value="1">
             <input type="hidden" name="event_id" value="<?php echo esc_attr((string) $eventId); ?>">
             <input type="hidden" name="return_url" value="<?php echo esc_url((string) get_permalink()); ?>">
 
@@ -132,14 +132,14 @@ final class TicketSalesController
     {
         if (
             ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST'
-            || ! isset($_POST['dizzy_ticket_purchase'])
+            || ! isset($_POST['dizzy_tm_ticket_purchase'])
         ) {
             return;
         }
 
-        $nonce = sanitize_text_field(wp_unslash((string) ($_POST['dizzy_ticket_nonce'] ?? '')));
+        $nonce = sanitize_text_field(wp_unslash((string) ($_POST['dizzy_tm_ticket_nonce'] ?? '')));
 
-        if (! wp_verify_nonce($nonce, 'dizzy_ticket_purchase')) {
+        if (! wp_verify_nonce($nonce, 'dizzy_tm_ticket_purchase')) {
             wp_die(esc_html__('Invalid ticket checkout request.', 'dizzy-ticket-manager'), '', ['response' => 403]);
         }
 
@@ -187,8 +187,8 @@ final class TicketSalesController
 
     public function renderTicket(): void
     {
-        $code = isset($_GET['dizzy_paid_ticket'])
-            ? sanitize_text_field(wp_unslash((string) $_GET['dizzy_paid_ticket']))
+        $code = isset($_GET['dizzy_tm_paid_ticket'])
+            ? sanitize_text_field(wp_unslash((string) $_GET['dizzy_tm_paid_ticket']))
             : '';
 
         if (! preg_match('/^[a-f0-9]{64}$/', $code)) {

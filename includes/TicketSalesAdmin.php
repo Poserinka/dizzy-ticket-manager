@@ -64,7 +64,7 @@ final class TicketSalesAdmin
         );
         register_setting(
             'dizzy_ticket_payment_settings',
-            'dizzy_ticket_hold_minutes',
+            'dizzy_tm_ticket_hold_minutes',
             ['type' => 'integer', 'sanitize_callback' => static fn ($value): int => min(60, max(5, absint($value))), 'default' => 15]
         );
     }
@@ -98,7 +98,7 @@ final class TicketSalesAdmin
                     </tr>
                     <tr>
                         <th><label for="dizzy-hold-minutes"><?php esc_html_e('Ticket hold time', 'dizzy-ticket-manager'); ?></label></th>
-                        <td><input id="dizzy-hold-minutes" type="number" min="5" max="60" name="dizzy_ticket_hold_minutes" value="<?php echo esc_attr((string) get_option('dizzy_ticket_hold_minutes', 15)); ?>"> <?php esc_html_e('minutes', 'dizzy-ticket-manager'); ?></td>
+                        <td><input id="dizzy-hold-minutes" type="number" min="5" max="60" name="dizzy_tm_ticket_hold_minutes" value="<?php echo esc_attr((string) get_option('dizzy_tm_ticket_hold_minutes', 15)); ?>"> <?php esc_html_e('minutes', 'dizzy-ticket-manager'); ?></td>
                     </tr>
                     <tr>
                         <th><?php esc_html_e('Mollie webhook URL', 'dizzy-ticket-manager'); ?></th>

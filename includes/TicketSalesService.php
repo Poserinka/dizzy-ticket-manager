@@ -67,7 +67,7 @@ final class TicketSalesService
         $returnBase = wp_validate_redirect($requestedReturnUrl, home_url('/'));
 
         $returnUrl = add_query_arg(
-            ['dizzy_order' => $order['token']],
+            ['dizzy_tm_order' => $order['token']],
             $returnBase
         );
 
@@ -150,6 +150,6 @@ final class TicketSalesService
 
     public function ticketUrl(string $code): string
     {
-        return add_query_arg(['dizzy_paid_ticket' => $code], home_url('/'));
+        return add_query_arg(['dizzy_tm_paid_ticket' => $code], home_url('/'));
     }
 }

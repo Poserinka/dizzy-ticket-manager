@@ -205,7 +205,7 @@ final class TicketSalesRepository
             }
 
             $now = current_time('mysql', true);
-            $holdMinutes = min(60, max(5, (int) get_option('dizzy_ticket_hold_minutes', 15)));
+            $holdMinutes = min(60, max(5, (int) get_option('dizzy_tm_ticket_hold_minutes', 15)));
             $expires = gmdate('Y-m-d H:i:s', time() + $holdMinutes * MINUTE_IN_SECONDS);
             $token = bin2hex(random_bytes(32));
             $total = number_format((float) $locked['price'] * $quantity, 2, '.', '');
