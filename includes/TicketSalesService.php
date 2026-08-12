@@ -106,7 +106,10 @@ final class TicketSalesService
         $payment = $this->mollie->getPayment($paymentId);
         $order = $this->repository->applyPayment($payment);
 
-        if (($before['status'] ?? '') !== 'paid' && ($order['status'] ?? '') === 'paid') {
+        if (
+            ($order['status'] ?? '') === 'paid'
+            && $this->repository->claimConfirmationEmail((int) $order['id'])
+        ) {
             $this->sendTickets($order);
         }
 
