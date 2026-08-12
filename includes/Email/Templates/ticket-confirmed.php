@@ -140,7 +140,7 @@ a[x-apple-data-detectors],
                       <td align="center" style="padding:10px 0;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) $event_time); ?></h3></td>
                      </tr>
 					 <tr>
-                      <td align="center" style="padding:10px 0;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) $$ticket_count); ?></h3></td>
+                      <td align="center" style="padding:10px 0;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) $ticket_count); ?></h3></td>
                      </tr>
 					 <tr>
                       <td align="center" style="padding:10px 0;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) $currency . ' ' . (string) $total_amount); ?></h3></td>
