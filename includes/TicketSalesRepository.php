@@ -425,4 +425,93 @@ final class TicketSalesRepository
         global $wpdb;
         return $wpdb->get_results("SELECT * FROM {$this->orders} ORDER BY created_at DESC LIMIT 500", ARRAY_A) ?: [];
     }
+
+    public function allTickets(): array
+    {
+        global $wpdb;
+
+        return $wpdb->get_results(
+            "SELECT t.*,i.ticket_name,o.customer_name,o.customer_email,p.post_title,occ.start_datetime
+            FROM {$this->tickets} t
+            INNER JOIN {$this->orders} o ON o.id=t.order_id
+            LEFT JOIN {$this->items} i ON i.id=t.order_item_id
+            LEFT JOIN {$wpdb->posts} p ON p.ID=t.event_id
+            LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ ON occ.id=t.occurrence_id
+            WHERE t.status='valid'
+            ORDER BY occ.start_datetime DESC,t.id DESC
+            LIMIT 1000",
+            ARRAY_A
+        ) ?: [];
+    }
+
+    /**
+     * @return array{sold:int,expected:int,checked_in:int,attended:int}
+     */
+    public function attendanceTotals(): array
+    {
+        global $wpdb;
+        $row = $wpdb->get_row(
+            "SELECT COUNT(*) sold,
+            SUM(CASE WHEN checked_in_at IS NOT NULL THEN 1 ELSE 0 END) checked_in
+            FROM {$this->tickets}
+            WHERE status='valid'",
+            ARRAY_A
+        ) ?: [];
+
+        $sold = (int) ($row['sold'] ?? 0);
+        $checked = (int) ($row['checked_in'] ?? 0);
+
+        return ['sold' => $sold, 'expected' => $sold, 'checked_in' => $checked, 'attended' => $checked];
+    }
+
+    public function undoCheckInTicket(string $code): bool
+    {
+        global $wpdb;
+
+        return $wpdb->update(
+            $this->tickets,
+            ['checked_in_at' => null, 'checked_in_by' => null],
+            ['ticket_code' => $code, 'status' => 'valid']
+        ) !== false;
+    }
+
+    public function reportRows(): array
+    {
+        global $wpdb;
+
+        return $wpdb->get_results(
+            "SELECT t.event_id,t.occurrence_id,p.post_title,occ.start_datetime,
+            COUNT(t.id) sold,
+            SUM(CASE WHEN t.checked_in_at IS NOT NULL THEN 1 ELSE 0 END) attended,
+            (SELECT COALESCE(SUM(o2.total_amount),0) FROM {$this->orders} o2
+                WHERE o2.event_id=t.event_id AND o2.occurrence_id=t.occurrence_id AND o2.status='paid') revenue,
+            (SELECT MAX(tt.capacity) FROM {$this->types} tt
+                WHERE tt.event_id=t.event_id AND tt.occurrence_id=t.occurrence_id) capacity
+            FROM {$this->tickets} t
+            LEFT JOIN {$wpdb->posts} p ON p.ID=t.event_id
+            LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ ON occ.id=t.occurrence_id
+            WHERE t.status='valid'
+            GROUP BY t.event_id,t.occurrence_id,p.post_title,occ.start_datetime
+            ORDER BY occ.start_datetime DESC",
+            ARRAY_A
+        ) ?: [];
+    }
+
+    /**
+     * @return array{sold:int,attended:int,revenue:float}
+     */
+    public function reportSummary(): array
+    {
+        $sold = 0;
+        $attended = 0;
+        $revenue = 0.0;
+
+        foreach ($this->reportRows() as $row) {
+            $sold += (int) $row['sold'];
+            $attended += (int) $row['attended'];
+            $revenue += (float) $row['revenue'];
+        }
+
+        return ['sold' => $sold, 'attended' => $attended, 'revenue' => $revenue];
+    }
 }

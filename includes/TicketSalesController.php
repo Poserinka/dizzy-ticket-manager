@@ -209,7 +209,7 @@ final class TicketSalesController
 
         if (
             current_user_can('manage_options')
-            && wp_verify_nonce($checkinNonce, 'dizzy_qr_checkin')
+            && wp_verify_nonce($checkinNonce, 'dizzy_ticket_qr_checkin')
         ) {
             $checkinResult = $this->repository->checkInTicket($code, get_current_user_id());
             $ticket = $this->repository->ticketByCode($code) ?? $ticket;
@@ -243,7 +243,7 @@ final class TicketSalesController
                 <p><strong><?php esc_html_e('Checked in', 'dizzy-ticket-manager'); ?></strong></p>
             <?php endif; ?>
             <?php if ($checkinResult !== '') : ?>
-                <p><a href="<?php echo esc_url(admin_url('admin.php?page=dizzy-reservations-checkin')); ?>" style="display:inline-block;background:#2271b1;color:#fff;padding:11px 18px;text-decoration:none"><?php esc_html_e('Return to Check-in', 'dizzy-ticket-manager'); ?></a></p>
+                <p><a href="<?php echo esc_url(admin_url('admin.php?page=dizzy-ticket-checkin')); ?>" style="display:inline-block;background:#2271b1;color:#fff;padding:11px 18px;text-decoration:none"><?php esc_html_e('Return to Check-in', 'dizzy-ticket-manager'); ?></a></p>
             <?php endif; ?>
         </body>
         </html>
