@@ -130,21 +130,64 @@ final class TicketSalesService
 
     private function sendTickets(array $order): void
     {
-        $links = [];
+        global $wpdb;
 
-        foreach ($this->repository->ticketsForOrder((int) $order['id']) as $ticket) {
-            $links[] = '<li><a href="' . esc_url($this->ticketUrl((string) $ticket['ticket_code'])) . '">' .
-                esc_html__('Open ticket', 'dizzy-ticket-manager') .
-                '</a></li>';
+        $ticketRows = $this->repository->ticketsForOrder((int) $order['id']);
+        $itemsTable = $wpdb->prefix . 'dizzy_tm_ticket_order_items';
+        $occurrencesTable = $wpdb->prefix . 'dizzy_event_occurrences';
+        $tickets = [];
+
+        foreach ($ticketRows as $index => $ticket) {
+            $type = (string) $wpdb->get_var($wpdb->prepare(
+                "SELECT ticket_name FROM {$itemsTable} WHERE id=%d LIMIT 1",
+                (int) $ticket['order_item_id']
+            ));
+            $code = (string) $ticket['ticket_code'];
+            $tickets[] = [
+                'code' => $code,
+                'type' => $type !== '' ? $type : __('Event Ticket', 'dizzy-ticket-manager'),
+                'url' => $this->ticketUrl($code),
+                'label' => sprintf(__('Ticket %1$d · %2$s', 'dizzy-ticket-manager'), $index + 1, strtoupper(substr($code, 0, 12))),
+            ];
         }
 
-        $message = '<p>' . esc_html__('Your payment was received. Your tickets are ready:', 'dizzy-ticket-manager') . '</p><ul>' .
-            implode('', $links) . '</ul>';
+        $start = (string) $wpdb->get_var($wpdb->prepare(
+            "SELECT start_datetime FROM {$occurrencesTable} WHERE id=%d LIMIT 1",
+            (int) $order['occurrence_id']
+        ));
+        $timestamp = $start !== '' ? strtotime($start) : false;
+        $eventDate = $timestamp !== false ? wp_date('d/m/Y', $timestamp, wp_timezone()) : '';
+        $eventTime = $timestamp !== false ? wp_date('H:i', $timestamp, wp_timezone()) : '';
+        $ticketCount = count($tickets);
 
-        $this->mailer->send(
+        $this->mailer->sendTemplate(
             (string) $order['customer_email'],
             __('Your event tickets', 'dizzy-ticket-manager'),
-            $message
+            'ticket-confirmed',
+            [
+                'order_id' => (int) $order['id'],
+                'event_name' => get_the_title((int) $order['event_id']),
+                'event_date' => $eventDate,
+                'event_time' => $eventTime,
+                'customer_name' => (string) $order['customer_name'],
+                'customer_email' => (string) $order['customer_email'],
+                'customer_phone' => (string) ($order['customer_phone'] ?? ''),
+                'ticket_count' => $ticketCount,
+                'total_amount' => (string) $order['total_amount'],
+                'currency' => (string) $order['currency'],
+                'tickets' => $tickets,
+
+                // Compatibility aliases for the copied reservation template.
+                'reservation_id' => (int) $order['id'],
+                'name' => (string) $order['customer_name'],
+                'email' => (string) $order['customer_email'],
+                'phone' => (string) ($order['customer_phone'] ?? ''),
+                'date' => $eventDate,
+                'time' => $eventTime,
+                'guests' => $ticketCount,
+                'message' => '',
+                'status' => 'paid',
+            ]
         );
     }
 
