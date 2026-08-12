@@ -3,7 +3,7 @@
  * Plugin Name: Dizzy Ticket Manager
  * Plugin URI: https://github.com/Poserinka/dizzy-ticket-manager
  * Description: Event ticket sales, Mollie iDEAL payments, QR tickets and check-in for Dizzy Events Manager.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author: Poserinka Design
  * Text Domain: dizzy-ticket-manager
  * Requires PHP: 8.2
@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 defined('ABSPATH') || exit;
 
-define('DIZZY_TICKETS_VERSION', '1.2.0');
+define('DIZZY_TICKETS_VERSION', '1.3.0');
 define('DIZZY_TICKETS_PATH', plugin_dir_path(__FILE__));
 
 require_once DIZZY_TICKETS_PATH . 'includes/Autoloader.php';
