@@ -19,7 +19,7 @@ defined('ABSPATH') || exit;
   <meta name="x-apple-disable-message-reformatting">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta content="telephone=no" name="format-detection">
-  <title><?php esc_html_e('Reservation confirmed', 'dizzy-reservations-manager'); ?></title><!--[if (mso 16)]>
+  <title><?php esc_html_e('Your event tickets', 'dizzy-ticket-manager'); ?></title><!--[if (mso 16)]>
     <style type="text/css">
     a {text-decoration: none;}
     </style>
@@ -131,13 +131,19 @@ a[x-apple-data-detectors],
                       <td align="center" style="padding:10px 0;Margin:0;font-size:0px"><img src="<?php echo plugin_dir_url( __DIR__ ).'Templates/images/jazzcafe-dizzy-logo-black.png'; ?>" alt="" width="484" class="adapt-img" style="display:block;font-size:14px;border:0;outline:none;text-decoration:none;margin:0"></td>
                      </tr>
                      <tr>
-                      <td align="center" class="es-m-p0r es-m-p0l" style="Margin:0;padding:15px 40px"><h2 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:26px;font-style:normal;font-weight:bold;line-height:31px;color:#333333"><br></h2><h2 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:26px;font-style:normal;font-weight:bold;line-height:31px;color:#333333"><?php esc_html_e('Reservation confirmed', 'dizzy-reservations-manager'); ?></h2><h2 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:26px;font-style:normal;font-weight:bold;line-height:31px;color:#333333"><br></h2></td>
+                      <td align="center" class="es-m-p0r es-m-p0l" style="Margin:0;padding:15px 40px"><h2 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:26px;font-style:normal;font-weight:bold;line-height:31px;color:#333333"><br></h2><h2 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:26px;font-style:normal;font-weight:bold;line-height:31px;color:#333333"><?php esc_html_e('Your tickets are ready', 'dizzy-ticket-manager'); ?></h2><h2 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:26px;font-style:normal;font-weight:bold;line-height:31px;color:#333333"><br></h2></td>
                      </tr>
                      <tr>
-                      <td align="center" style="padding:10px 0;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) $date); ?></h3></td>
+                      <td align="center" style="padding:10px 0;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) $event_date); ?></h3></td>
                      </tr>
                      <tr>
-                      <td align="center" style="padding:10px 0;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) $time); ?></h3></td>
+                      <td align="center" style="padding:10px 0;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) $event_time); ?></h3></td>
+                     </tr>
+					 <tr>
+                      <td align="center" style="padding:10px 0;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) $$ticket_count); ?></h3></td>
+                     </tr>
+					 <tr>
+                      <td align="center" style="padding:10px 0;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) $currency . ' ' . (string) $total_amount); ?></h3></td>
                      </tr>
                     </tbody>
                    </table></td>
@@ -153,20 +159,31 @@ a[x-apple-data-detectors],
                   <td align="center" valign="top" style="padding:0;Margin:0;width:560px">
                    <table cellpadding="0" cellspacing="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;border-radius:5px;border-collapse:separate" role="presentation">
                     <tbody>
+					<?php foreach ((array) $tickets as $index => $ticket) : ?>	
+					 <tr>
+                      <td align="center" style="padding:10px 0 5px;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) ($ticket['label'] ?? '')); ?></h3></td>
+                     </tr>
+						
+					 <tr>
+                      <td align="center" style="padding:10px 0;Margin:0"><span class="es-button-border" style="border-style:solid;border-color:#2CB543;background:#5C68E2;border-width:0px;display:inline-block;border-radius:6px;width:auto"><a href="<?php echo esc_url((string) ($ticket['url'] ?? '')); ?>" target="_blank" class="es-button" style="mso-style-priority:100 !important;text-decoration:none !important;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;font-weight:normal;padding:10px 30px;display:inline-block;background:#5C68E2;border-radius:6px;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-style:normal;line-height:24px;width:auto;text-align:center;letter-spacing:0;mso-padding-alt:0;mso-border-alt:10px solid #5C68E2;text-transform:none;border-left-width:30px;border-right-width:30px"><?php esc_html_e('Open ticket', 'dizzy-ticket-manager'); ?></a></span></td>
+                     </tr>
+					 <?php endforeach; ?>	
+						
+                     
                      <tr>
+                      <td align="center" style="padding:10px 0 5px;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333">Name: <?php echo esc_html((string) $customer_name); ?></h3></td>
+                     </tr>
+                     <tr>
+                      <td align="center" style="padding:10px 0 5px;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333">Email: <?php echo esc_html((string) $customer_email); ?></h3></td>
+                     </tr>
+                     <tr>
+                      <td align="center" style="padding:10px 0 5px;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333">Phone: <?php echo esc_html((string) $customer_phone); ?></h3></td>
+                     </tr>
+                     <tr>
+                      <td align="center" style="padding:10px 0 5px;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html(sprintf(__('Order number: %d', 'dizzy-ticket-manager'), (int) $order_id)); ?></h3></td>
+                     </tr>
+					 <tr>
                       <td align="center" style="padding:10px 0;Margin:0"><span class="es-button-border" style="border-style:solid;border-color:#2CB543;background:#5C68E2;border-width:0px;display:inline-block;border-radius:6px;width:auto"><a href="https://maps.app.goo.gl/t73PkgDRtb6RvKFMA" target="_blank" class="es-button" style="mso-style-priority:100 !important;text-decoration:none !important;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;font-weight:normal;padding:10px 30px;display:inline-block;background:#5C68E2;border-radius:6px;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-style:normal;line-height:24px;width:auto;text-align:center;letter-spacing:0;mso-padding-alt:0;mso-border-alt:10px solid #5C68E2;text-transform:none;border-left-width:30px;border-right-width:30px">GOOGLE MAPS</a></span></td>
-                     </tr>
-                     <tr>
-                      <td align="center" style="padding:10px 0 5px;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333">Name: <?php echo esc_html((string) $name); ?></h3></td>
-                     </tr>
-                     <tr>
-                      <td align="center" style="padding:10px 0 5px;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333">Email: <?php echo esc_html((string) $email); ?></h3></td>
-                     </tr>
-                     <tr>
-                      <td align="center" style="padding:10px 0 5px;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333">Phone: <?php echo esc_html((string) $phone); ?></h3></td>
-                     </tr>
-                     <tr>
-                      <td align="center" style="padding:10px 0 5px;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333">Guest&nbsp;Number: <?php echo esc_html((string) $guests); ?></h3></td>
                      </tr>
                      <tr>
                       <td align="center" style="padding:10px 0;Margin:0"><p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;font-weight:normal;color:#333333;font-size:14px">You can&nbsp;cancel your&nbsp;reservation by reaching us via phone.</p></td>
