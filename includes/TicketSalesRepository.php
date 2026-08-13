@@ -441,10 +441,17 @@ final class TicketSalesRepository
         $wpdb->update($this->orders, ['confirmation_sent_at' => null], ['id' => $orderId]);
     }
 
-    public function allOrders(): array
+    public function allOrders(?string $eventDate = null): array
     {
         global $wpdb;
-        return $wpdb->get_results("SELECT * FROM {$this->orders} ORDER BY created_at DESC LIMIT 500", ARRAY_A) ?: [];
+        $sql = "SELECT o.* FROM {$this->orders} o
+            LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ ON occ.id=o.occurrence_id";
+
+        if ($eventDate !== null && $eventDate !== '') {
+            $sql .= $wpdb->prepare(" WHERE DATE(occ.start_datetime)=%s", $eventDate);
+        }
+
+        return $wpdb->get_results($sql . " ORDER BY o.created_at DESC LIMIT 500", ARRAY_A) ?: [];
     }
 
     public function allTickets(?string $eventDate = null): array
