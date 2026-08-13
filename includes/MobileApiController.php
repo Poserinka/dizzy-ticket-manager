@@ -59,9 +59,9 @@ final class MobileApiController
         return current_user_can(ControllerRole::TICKETS_CAP);
     }
 
-    public function tickets(): WP_REST_Response
+    public function tickets(WP_REST_Request $request): WP_REST_Response
     {
-        $date = current_time('Y-m-d');
+        $date = $this->requestedDate($request);
 
         return new WP_REST_Response(array_map(static fn (array $row): array => [
             'id' => (int) $row['id'],
@@ -76,9 +76,9 @@ final class MobileApiController
         ], $this->repository->allTickets($date)));
     }
 
-    public function orders(): WP_REST_Response
+    public function orders(WP_REST_Request $request): WP_REST_Response
     {
-        $date = current_time('Y-m-d');
+        $date = $this->requestedDate($request);
 
         return new WP_REST_Response(array_map(static fn (array $row): array => [
             'id' => (int) $row['id'],
@@ -94,9 +94,9 @@ final class MobileApiController
         ], $this->repository->allOrders($date)));
     }
 
-    public function attendance(): WP_REST_Response
+    public function attendance(WP_REST_Request $request): WP_REST_Response
     {
-        return new WP_REST_Response($this->repository->attendanceTotals(current_time('Y-m-d')));
+        return new WP_REST_Response($this->repository->attendanceTotals($this->requestedDate($request)));
     }
 
     public function checkIn(WP_REST_Request $request): WP_REST_Response
@@ -116,6 +116,17 @@ final class MobileApiController
         $code = $this->ticketCode((string) $request->get_param('ticket'));
         $ok = $code !== '' && $this->repository->undoCheckInTicket($code);
         return new WP_REST_Response(['ok' => $ok], $ok ? 200 : 400);
+    }
+
+    private function requestedDate(WP_REST_Request $request): string
+    {
+        $date = sanitize_text_field((string) $request->get_param('date'));
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
+            return current_time('Y-m-d');
+        }
+
+        return $date;
     }
 
     private function ticketCode(string $value): string
