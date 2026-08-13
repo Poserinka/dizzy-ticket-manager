@@ -61,6 +61,8 @@ final class MobileApiController
 
     public function tickets(): WP_REST_Response
     {
+        $date = current_time('Y-m-d');
+
         return new WP_REST_Response(array_map(static fn (array $row): array => [
             'id' => (int) $row['id'],
             'code' => (string) $row['ticket_code'],
@@ -71,11 +73,13 @@ final class MobileApiController
             'event' => (string) ($row['post_title'] ?? ''),
             'event_date' => (string) ($row['start_datetime'] ?? ''),
             'checked_in_at' => $row['checked_in_at'] ?: null,
-        ], $this->repository->allTickets()));
+        ], $this->repository->allTickets($date)));
     }
 
     public function orders(): WP_REST_Response
     {
+        $date = current_time('Y-m-d');
+
         return new WP_REST_Response(array_map(static fn (array $row): array => [
             'id' => (int) $row['id'],
             'event_id' => (int) $row['event_id'],
@@ -87,12 +91,12 @@ final class MobileApiController
             'amount' => (string) $row['total_amount'],
             'currency' => (string) $row['currency'],
             'created_at' => (string) $row['created_at'],
-        ], $this->repository->allOrders()));
+        ], $this->repository->allOrders($date)));
     }
 
     public function attendance(): WP_REST_Response
     {
-        return new WP_REST_Response($this->repository->attendanceTotals());
+        return new WP_REST_Response($this->repository->attendanceTotals(current_time('Y-m-d')));
     }
 
     public function checkIn(WP_REST_Request $request): WP_REST_Response
