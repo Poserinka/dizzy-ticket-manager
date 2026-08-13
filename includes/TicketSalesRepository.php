@@ -447,7 +447,7 @@ final class TicketSalesRepository
         return $wpdb->get_results("SELECT * FROM {$this->orders} ORDER BY created_at DESC LIMIT 500", ARRAY_A) ?: [];
     }
 
-    public function allTickets(): array
+    public function allTickets(?string $eventDate = null): array
     {
         global $wpdb;
 
@@ -458,8 +458,9 @@ final class TicketSalesRepository
             LEFT JOIN {$this->items} i ON i.id=t.order_item_id
             LEFT JOIN {$wpdb->posts} p ON p.ID=t.event_id
             LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ ON occ.id=t.occurrence_id
-            WHERE t.status='valid'
-            ORDER BY occ.start_datetime DESC,t.id DESC
+            WHERE t.status='valid'" .
+            ($eventDate !== null && $eventDate !== '' ? $wpdb->prepare(" AND DATE(occ.start_datetime)=%s", $eventDate) : '') .
+            " ORDER BY occ.start_datetime DESC,t.id DESC
             LIMIT 1000",
             ARRAY_A
         ) ?: [];
@@ -468,14 +469,16 @@ final class TicketSalesRepository
     /**
      * @return array{sold:int,expected:int,checked_in:int,attended:int}
      */
-    public function attendanceTotals(): array
+    public function attendanceTotals(?string $eventDate = null): array
     {
         global $wpdb;
         $row = $wpdb->get_row(
             "SELECT COUNT(*) sold,
             SUM(CASE WHEN checked_in_at IS NOT NULL THEN 1 ELSE 0 END) checked_in
-            FROM {$this->tickets}
-            WHERE status='valid'",
+            FROM {$this->tickets} t
+            LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ ON occ.id=t.occurrence_id
+            WHERE t.status='valid'" .
+            ($eventDate !== null && $eventDate !== '' ? $wpdb->prepare(" AND DATE(occ.start_datetime)=%s", $eventDate) : ''),
             ARRAY_A
         ) ?: [];
 
