@@ -444,11 +444,18 @@ final class TicketSalesRepository
     public function allOrders(?string $eventDate = null): array
     {
         global $wpdb;
-        $sql = "SELECT o.* FROM {$this->orders} o
-            LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ ON occ.id=o.occurrence_id";
+        $sql = "SELECT o.* FROM {$this->orders} o";
 
         if ($eventDate !== null && $eventDate !== '') {
-            $sql .= $wpdb->prepare(" WHERE DATE(occ.start_datetime)=%s", $eventDate);
+            $sql .= $wpdb->prepare(
+                " WHERE EXISTS (
+                    SELECT 1 FROM {$wpdb->prefix}dizzy_event_occurrences occ
+                    WHERE occ.event_id=o.event_id
+                    AND occ.status='publish'
+                    AND DATE(occ.start_datetime)=%s
+                )",
+                $eventDate
+            );
         }
 
         return $wpdb->get_results($sql . " ORDER BY o.created_at DESC LIMIT 500", ARRAY_A) ?: [];
@@ -464,7 +471,8 @@ final class TicketSalesRepository
             INNER JOIN {$this->orders} o ON o.id=t.order_id
             LEFT JOIN {$this->items} i ON i.id=t.order_item_id
             LEFT JOIN {$wpdb->posts} p ON p.ID=t.event_id
-            LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ ON occ.id=t.occurrence_id
+            LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ
+                ON occ.event_id=t.event_id AND occ.status='publish'
             WHERE t.status='valid'" .
             ($eventDate !== null && $eventDate !== '' ? $wpdb->prepare(" AND DATE(occ.start_datetime)=%s", $eventDate) : '') .
             " ORDER BY occ.start_datetime DESC,t.id DESC
@@ -483,7 +491,8 @@ final class TicketSalesRepository
             "SELECT COUNT(*) sold,
             SUM(CASE WHEN checked_in_at IS NOT NULL THEN 1 ELSE 0 END) checked_in
             FROM {$this->tickets} t
-            LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ ON occ.id=t.occurrence_id
+            LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ
+                ON occ.event_id=t.event_id AND occ.status='publish'
             WHERE t.status='valid'" .
             ($eventDate !== null && $eventDate !== '' ? $wpdb->prepare(" AND DATE(occ.start_datetime)=%s", $eventDate) : ''),
             ARRAY_A
