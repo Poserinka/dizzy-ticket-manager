@@ -35,6 +35,7 @@ final class Plugin
         $service = new TicketSalesService($events, $repository, $mollie, $mailer);
 
         (new TicketSalesController($repository, $service, $events))->register();
+        (new MobileApiController($repository))->register();
         (new TicketExperience($repository))->register();
 
         if (is_admin()) {
