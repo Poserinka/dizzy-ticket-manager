@@ -165,7 +165,7 @@ final class TicketSalesService
         $eventTime = $timestamp !== false ? wp_date('H:i', $timestamp, wp_timezone()) : '';
         $ticketCount = count($tickets);
 
-        return $this->mailer->sendTemplate(
+        $sent = $this->mailer->sendTemplate(
             (string) $order['customer_email'],
             __('Your event tickets', 'dizzy-ticket-manager'),
             'ticket-confirmed',
@@ -194,6 +194,21 @@ final class TicketSalesService
                 'status' => 'paid',
             ]
         );
+
+        if ($sent) {
+            do_action('dizzy_ticket_purchased', [
+                'order_id' => (int) $order['id'],
+                'customer_name' => (string) $order['customer_name'],
+                'customer_phone' => (string) ($order['customer_phone'] ?? ''),
+                'event_name' => get_the_title((int) $order['event_id']),
+                'event_date' => $eventDate,
+                'event_time' => $eventTime,
+                'ticket_count' => $ticketCount,
+                'tickets' => $tickets,
+            ]);
+        }
+
+        return $sent;
     }
 
     public function ticketUrl(string $code): string
