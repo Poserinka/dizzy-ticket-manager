@@ -79,10 +79,7 @@ final class TicketSalesAdmin
             <table class="widefat striped">
                 <thead><tr><th><?php esc_html_e('Ticket', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Holder', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Type', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event date', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Status', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Created', 'dizzy-ticket-manager'); ?></th></tr></thead>
                 <tbody>
-                <?php if ($manualTickets === []) : ?>
-                    <tr><td colspan="6"><?php esc_html_e('No tickets are available for today.', 'dizzy-ticket-manager'); ?></td></tr>
-                <?php endif; ?>
-                <?php foreach ($manualTickets as $ticket) : $code = (string) $ticket['ticket_code']; ?>
+                <?php foreach ($this->repository->allTickets() as $ticket) : $code = (string) $ticket['ticket_code']; ?>
                     <tr>
                         <td><code><?php echo esc_html(strtoupper(substr($code, 0, 12))); ?></code></td>
                         <td><?php echo esc_html((string) $ticket['holder_name']); ?><br><?php echo esc_html((string) $ticket['holder_email']); ?></td>
@@ -138,7 +135,10 @@ final class TicketSalesAdmin
             <table class="widefat striped">
                 <thead><tr><th><?php esc_html_e('Holder', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Ticket', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Date', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Checked in', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Action', 'dizzy-ticket-manager'); ?></th></tr></thead>
                 <tbody>
-                <?php foreach ($this->repository->allTickets() as $ticket) : $code = (string) $ticket['ticket_code']; ?>
+                <?php if ($manualTickets === []) : ?>
+                    <tr><td colspan="6"><?php esc_html_e('No tickets are available for today.', 'dizzy-ticket-manager'); ?></td></tr>
+                <?php endif; ?>
+                <?php foreach ($manualTickets as $ticket) : $code = (string) $ticket['ticket_code']; ?>
                     <tr>
                         <td><?php echo esc_html((string) $ticket['holder_name']); ?><br><?php echo esc_html((string) $ticket['holder_email']); ?></td>
                         <td><?php echo esc_html((string) ($ticket['ticket_name'] ?: strtoupper(substr($code, 0, 12)))); ?></td>
