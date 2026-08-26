@@ -114,7 +114,7 @@ final class TicketSalesAdmin
     {
         $this->guard(ControllerRole::TICKETS_CAP);
         $today = current_time('Y-m-d');
-        $totals = $this->repository->attendanceTotals();
+        $totals = $this->repository->attendanceTotals($today);
         $manualTickets = $this->repository->allTickets($today);
         ?>
         <style>#wpbody-content>.notice,#wpbody-content>.update-nag,#wpbody-content>.wrap>.notice{display:none!important}</style>
