@@ -444,21 +444,16 @@ final class TicketSalesRepository
     public function allOrders(?string $eventDate = null): array
     {
         global $wpdb;
-        $sql = "SELECT o.* FROM {$this->orders} o";
+        $sql = "SELECT o.*,p.post_title,occ.start_datetime
+            FROM {$this->orders} o
+            LEFT JOIN {$wpdb->posts} p ON p.ID=o.event_id
+            LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ ON occ.id=o.occurrence_id";
 
         if ($eventDate !== null && $eventDate !== '') {
-            $sql .= $wpdb->prepare(
-                " WHERE EXISTS (
-                    SELECT 1 FROM {$wpdb->prefix}dizzy_event_occurrences occ
-                    WHERE occ.event_id=o.event_id
-                    AND occ.status='publish'
-                    AND DATE(occ.start_datetime)=%s
-                )",
-                $eventDate
-            );
+            $sql .= $wpdb->prepare(" WHERE DATE(occ.start_datetime)=%s", $eventDate);
         }
 
-        return $wpdb->get_results($sql . " ORDER BY o.created_at DESC LIMIT 500", ARRAY_A) ?: [];
+        return $wpdb->get_results($sql . " ORDER BY occ.start_datetime DESC,o.created_at DESC LIMIT 500", ARRAY_A) ?: [];
     }
 
     public function allTickets(?string $eventDate = null): array
@@ -472,7 +467,7 @@ final class TicketSalesRepository
             LEFT JOIN {$this->items} i ON i.id=t.order_item_id
             LEFT JOIN {$wpdb->posts} p ON p.ID=t.event_id
             LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ
-                ON occ.event_id=t.event_id AND occ.status='publish'
+                ON occ.id=t.occurrence_id
             WHERE t.status='valid'" .
             ($eventDate !== null && $eventDate !== '' ? $wpdb->prepare(" AND DATE(occ.start_datetime)=%s", $eventDate) : '') .
             " ORDER BY occ.start_datetime DESC,t.id DESC
