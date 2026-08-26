@@ -158,22 +158,196 @@ final class TicketSalesAdmin
     public function reportsPage(): void
     {
         $this->guard();
+        $rows = $this->repository->reportRows();
         $summary = $this->repository->reportSummary();
+        $calendarRows = array_map(static fn (array $row): array => [
+            'date' => substr((string) ($row['start_datetime'] ?? ''), 0, 10),
+            'sold' => (int) ($row['sold'] ?? 0),
+            'attended' => (int) ($row['attended'] ?? 0),
+            'revenue' => (float) ($row['revenue'] ?? 0),
+        ], $rows);
         $export = wp_nonce_url(admin_url('admin-post.php?action=dizzy_ticket_report_csv'), 'dizzy_ticket_report_csv');
         ?>
-        <div class="wrap">
+        <div class="wrap dizzy-ticket-reports-admin">
             <h1><?php esc_html_e('Ticket Reports', 'dizzy-ticket-manager'); ?></h1>
-            <?php echo $this->cards([
-                __('Tickets sold', 'dizzy-ticket-manager') => $summary['sold'],
-                __('Tickets attended', 'dizzy-ticket-manager') => $summary['attended'],
-                __('Revenue', 'dizzy-ticket-manager') => 'EUR ' . number_format_i18n($summary['revenue'], 2),
-            ]); ?>
-            <p><a class="button" href="<?php echo esc_url($export); ?>"><?php esc_html_e('Export CSV', 'dizzy-ticket-manager'); ?></a></p>
-            <table class="widefat striped">
-                <thead><tr><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Date', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Sold', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Attended', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Capacity', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Usage', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Revenue', 'dizzy-ticket-manager'); ?></th></tr></thead>
-                <tbody><?php foreach ($this->repository->reportRows() as $row) : $capacity = (int) ($row['capacity'] ?? 0); $sold = (int) $row['sold']; ?><tr><td><?php echo esc_html((string) $row['post_title']); ?></td><td><?php echo esc_html((string) $row['start_datetime']); ?></td><td><?php echo esc_html((string) $sold); ?></td><td><?php echo esc_html((string) $row['attended']); ?></td><td><?php echo esc_html($capacity > 0 ? (string) $capacity : __('Unlimited', 'dizzy-ticket-manager')); ?></td><td><?php echo esc_html($capacity > 0 ? round($sold / $capacity * 100, 1) . '%' : '—'); ?></td><td>EUR <?php echo esc_html(number_format_i18n((float) $row['revenue'], 2)); ?></td></tr><?php endforeach; ?></tbody>
-            </table>
+            <div class="dizzy-ticket-reports-workspace">
+                <section class="dizzy-ticket-report-list">
+                    <div class="dizzy-ticket-report-heading">
+                        <div>
+                            <h2 id="dizzy-ticket-report-title"><?php esc_html_e('All Ticket Reports', 'dizzy-ticket-manager'); ?></h2>
+                            <div class="dizzy-ticket-report-cards">
+                                <div><strong id="dizzy-report-sold"><?php echo esc_html((string) $summary['sold']); ?></strong><?php esc_html_e('Tickets sold', 'dizzy-ticket-manager'); ?></div>
+                                <div><strong id="dizzy-report-attended"><?php echo esc_html((string) $summary['attended']); ?></strong><?php esc_html_e('Tickets attended', 'dizzy-ticket-manager'); ?></div>
+                                <div><strong id="dizzy-report-revenue"><?php echo esc_html(number_format_i18n((float) $summary['revenue'], 2)); ?></strong><?php esc_html_e('Revenue (EUR)', 'dizzy-ticket-manager'); ?></div>
+                            </div>
+                        </div>
+                        <button type="button" class="button-link" id="dizzy-ticket-report-show-all"><?php esc_html_e('Show all', 'dizzy-ticket-manager'); ?></button>
+                    </div>
+                    <div class="dizzy-ticket-report-actions"><a class="button" href="<?php echo esc_url($export); ?>"><?php esc_html_e('Export CSV', 'dizzy-ticket-manager'); ?></a></div>
+                    <div class="dizzy-ticket-report-table-wrap">
+                        <table class="widefat striped">
+                            <thead><tr><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Date', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Sold', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Attended', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Capacity', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Usage', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Revenue', 'dizzy-ticket-manager'); ?></th></tr></thead>
+                            <tbody>
+                            <?php foreach ($rows as $row) : $capacity = (int) ($row['capacity'] ?? 0); $sold = (int) $row['sold']; $date = substr((string) ($row['start_datetime'] ?? ''), 0, 10); ?>
+                                <tr data-ticket-report-date="<?php echo esc_attr($date); ?>">
+                                    <td><?php echo esc_html((string) $row['post_title']); ?></td>
+                                    <td><?php echo esc_html((string) $row['start_datetime']); ?></td>
+                                    <td><?php echo esc_html((string) $sold); ?></td>
+                                    <td><?php echo esc_html((string) $row['attended']); ?></td>
+                                    <td><?php echo esc_html($capacity > 0 ? (string) $capacity : __('Unlimited', 'dizzy-ticket-manager')); ?></td>
+                                    <td><?php echo esc_html($capacity > 0 ? round($sold / $capacity * 100, 1) . '%' : '—'); ?></td>
+                                    <td>EUR <?php echo esc_html(number_format_i18n((float) $row['revenue'], 2)); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <tr id="dizzy-ticket-report-empty" hidden><td colspan="7"><?php esc_html_e('No ticket reports for this date.', 'dizzy-ticket-manager'); ?></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                <aside class="dizzy-ticket-report-calendar-column">
+                    <?php $this->reportsCalendar($calendarRows); ?>
+                </aside>
+            </div>
         </div>
+        <?php
+    }
+
+    private function reportsCalendar(array $rows): void
+    {
+        ?>
+        <style>
+            .dizzy-ticket-reports-workspace{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(460px,.9fr);gap:24px;align-items:start;margin-top:14px}
+            .dizzy-ticket-report-list,.dizzy-ticket-calendar-surface{background:#fff;border:1px solid #c3c4c7}
+            .dizzy-ticket-report-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:12px;border-bottom:1px solid #c3c4c7}
+            .dizzy-ticket-report-heading h2{margin:0 0 12px;font-size:14px}
+            .dizzy-ticket-report-cards{display:flex;gap:12px;flex-wrap:wrap}
+            .dizzy-ticket-report-cards>div{background:#fff;border:1px solid #ccd0d4;padding:12px 14px;min-width:150px}
+            .dizzy-ticket-report-cards strong{display:block;font-size:22px;line-height:1.1}
+            .dizzy-ticket-report-actions{padding:10px 12px}
+            .dizzy-ticket-report-table-wrap{overflow-x:auto}.dizzy-ticket-report-table-wrap .widefat{border:0}.dizzy-ticket-report-table-wrap tr.is-calendar-hidden{display:none}
+            .dizzy-ticket-calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+            .dizzy-ticket-calendar-nav{display:flex;align-items:center;gap:8px}
+            .dizzy-ticket-calendar-month{min-width:150px;text-align:center;font-size:15px;font-weight:600;text-transform:capitalize}
+            .dizzy-ticket-calendar-weekdays,.dizzy-ticket-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+            .dizzy-ticket-calendar-weekdays div{padding:10px 4px;text-align:center;font-size:12px;font-weight:600;border-bottom:1px solid #dcdcde}
+            .dizzy-ticket-calendar-day{position:relative;min-height:72px;padding:7px;border:0;border-right:1px solid #e2e4e7;border-bottom:1px solid #e2e4e7;background:#fff;color:#1d2327;text-align:left;cursor:pointer}
+            .dizzy-ticket-calendar-day:nth-child(7n){border-right:0}.dizzy-ticket-calendar-day:hover{background:#f6f7f7}
+            .dizzy-ticket-calendar-day.is-selected{background:#eef5ff;box-shadow:inset 0 0 0 2px #2271b1}
+            .dizzy-ticket-calendar-day.is-other{color:#8c8f94;background:#fafafa}.dizzy-ticket-calendar-day-number{font-weight:600}
+            .dizzy-ticket-calendar-count{display:block;width:max-content;max-width:100%;margin-top:15px;padding:3px 6px;border-radius:10px;background:#e7f3ff;font-size:10px;white-space:nowrap}
+            .dizzy-ticket-calendar-count.is-busy{background:#fff0d5}
+            @media(max-width:1300px){.dizzy-ticket-reports-workspace{grid-template-columns:minmax(0,1.35fr) minmax(400px,.9fr)}.dizzy-ticket-calendar-day{min-height:64px}}
+            @media(max-width:1050px){.dizzy-ticket-reports-workspace{display:flex;flex-direction:column-reverse}.dizzy-ticket-report-list,.dizzy-ticket-report-calendar-column{width:100%}}
+            @media(max-width:600px){.dizzy-ticket-calendar-day{min-height:52px;padding:4px}.dizzy-ticket-calendar-count{overflow:hidden;margin-top:5px;padding:0;width:8px;height:8px;text-indent:-9999px}.dizzy-ticket-calendar-toolbar{align-items:flex-start;flex-direction:column}}
+        </style>
+        <div class="dizzy-ticket-calendar-toolbar">
+            <div class="dizzy-ticket-calendar-nav">
+                <button type="button" class="button" id="dizzy-ticket-calendar-prev" aria-label="<?php esc_attr_e('Previous month', 'dizzy-ticket-manager'); ?>">‹</button>
+                <div class="dizzy-ticket-calendar-month" id="dizzy-ticket-calendar-month"></div>
+                <button type="button" class="button" id="dizzy-ticket-calendar-next" aria-label="<?php esc_attr_e('Next month', 'dizzy-ticket-manager'); ?>">›</button>
+            </div>
+            <button type="button" class="button" id="dizzy-ticket-calendar-today"><?php esc_html_e('Today', 'dizzy-ticket-manager'); ?></button>
+        </div>
+        <div class="dizzy-ticket-calendar-surface">
+            <div class="dizzy-ticket-calendar-weekdays">
+                <?php foreach ([__('Mon', 'dizzy-ticket-manager'), __('Tue', 'dizzy-ticket-manager'), __('Wed', 'dizzy-ticket-manager'), __('Thu', 'dizzy-ticket-manager'), __('Fri', 'dizzy-ticket-manager'), __('Sat', 'dizzy-ticket-manager'), __('Sun', 'dizzy-ticket-manager')] as $day) : ?><div><?php echo esc_html($day); ?></div><?php endforeach; ?>
+            </div>
+            <div class="dizzy-ticket-calendar-grid" id="dizzy-ticket-calendar-grid"></div>
+        </div>
+        <script>
+        (() => {
+            const rows = <?php echo wp_json_encode($rows); ?>;
+            const grid = document.getElementById('dizzy-ticket-calendar-grid');
+            if (!grid) return;
+            const monthLabel = document.getElementById('dizzy-ticket-calendar-month');
+            const listTitle = document.getElementById('dizzy-ticket-report-title');
+            const showAll = document.getElementById('dizzy-ticket-report-show-all');
+            const soldEl = document.getElementById('dizzy-report-sold');
+            const attendedEl = document.getElementById('dizzy-report-attended');
+            const revenueEl = document.getElementById('dizzy-report-revenue');
+            const tableRows = Array.from(document.querySelectorAll('[data-ticket-report-date]'));
+            const emptyRow = document.getElementById('dizzy-ticket-report-empty');
+            const locale = <?php echo wp_json_encode(str_replace('_', '-', determine_locale())); ?>;
+            const allLabel = <?php echo wp_json_encode(__('All Ticket Reports', 'dizzy-ticket-manager')); ?>;
+            const ticketsLabel = <?php echo wp_json_encode(__('tickets', 'dizzy-ticket-manager')); ?>;
+            const grouped = {};
+            rows.forEach(row => {
+                if (/^\d{4}-\d{2}-\d{2}$/.test(row.date)) {
+                    grouped[row.date] ||= {sold:0, attended:0, revenue:0};
+                    grouped[row.date].sold += Number(row.sold || 0);
+                    grouped[row.date].attended += Number(row.attended || 0);
+                    grouped[row.date].revenue += Number(row.revenue || 0);
+                }
+            });
+            const now = new Date();
+            let view = new Date(now.getFullYear(), now.getMonth(), 1);
+            let selected = '';
+
+            function localKey(date) {
+                return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+            }
+
+            function filterReport() {
+                let visible = 0;
+                tableRows.forEach(row => {
+                    const show = !selected || row.dataset.ticketReportDate === selected;
+                    row.classList.toggle('is-calendar-hidden', !show);
+                    if (show) visible++;
+                });
+                emptyRow.hidden = !selected || visible > 0;
+                const filtered = selected ? rows.filter(row => row.date === selected) : rows;
+                soldEl.textContent = String(filtered.reduce((sum, row) => sum + Number(row.sold || 0), 0));
+                attendedEl.textContent = String(filtered.reduce((sum, row) => sum + Number(row.attended || 0), 0));
+                revenueEl.textContent = new Intl.NumberFormat(locale, {minimumFractionDigits:2, maximumFractionDigits:2}).format(filtered.reduce((sum, row) => sum + Number(row.revenue || 0), 0));
+                showAll.hidden = !selected;
+                listTitle.textContent = selected
+                    ? new Intl.DateTimeFormat(locale, {weekday:'long', day:'numeric', month:'long', year:'numeric'}).format(new Date(selected + 'T12:00:00'))
+                    : allLabel;
+            }
+
+            function renderCalendar() {
+                monthLabel.textContent = new Intl.DateTimeFormat(locale, {month:'long', year:'numeric'}).format(view);
+                grid.innerHTML = '';
+                const first = new Date(view.getFullYear(), view.getMonth(), 1);
+                const offset = (first.getDay() + 6) % 7;
+                const start = new Date(view.getFullYear(), view.getMonth(), 1 - offset);
+                for (let index = 0; index < 42; index++) {
+                    const date = new Date(start);
+                    date.setDate(start.getDate() + index);
+                    const key = localKey(date);
+                    const totals = grouped[key] || {sold:0, attended:0, revenue:0};
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'dizzy-ticket-calendar-day' + (date.getMonth() !== view.getMonth() ? ' is-other' : '') + (key === selected ? ' is-selected' : '');
+                    button.setAttribute('aria-label', date.toDateString() + (totals.sold ? ', ' + totals.sold + ' ' + ticketsLabel : ''));
+                    const number = document.createElement('span');
+                    number.className = 'dizzy-ticket-calendar-day-number';
+                    number.textContent = String(date.getDate());
+                    button.appendChild(number);
+                    if (totals.sold) {
+                        const count = document.createElement('span');
+                        count.className = 'dizzy-ticket-calendar-count' + (totals.sold >= 10 ? ' is-busy' : '');
+                        count.textContent = totals.sold + ' ' + ticketsLabel;
+                        button.appendChild(count);
+                    }
+                    button.addEventListener('click', () => {
+                        selected = key;
+                        if (date.getMonth() !== view.getMonth()) view = new Date(date.getFullYear(), date.getMonth(), 1);
+                        renderCalendar();
+                        filterReport();
+                    });
+                    grid.appendChild(button);
+                }
+            }
+
+            showAll.addEventListener('click', () => { selected = ''; renderCalendar(); filterReport(); });
+            document.getElementById('dizzy-ticket-calendar-prev').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderCalendar(); });
+            document.getElementById('dizzy-ticket-calendar-next').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); renderCalendar(); });
+            document.getElementById('dizzy-ticket-calendar-today').addEventListener('click', () => { const today = new Date(); view = new Date(today.getFullYear(), today.getMonth(), 1); selected = localKey(today); renderCalendar(); filterReport(); });
+            renderCalendar();
+            filterReport();
+        })();
+        </script>
         <?php
     }
 
