@@ -73,25 +73,48 @@ final class TicketSalesAdmin
     public function ticketsPage(): void
     {
         $this->guard(ControllerRole::TICKETS_CAP);
+        $tickets = $this->repository->allTickets();
+        $calendarRows = array_map(static fn (array $ticket): array => [
+            'date' => substr((string) ($ticket['start_datetime'] ?? ''), 0, 10),
+            'checked' => ! empty($ticket['checked_in_at']),
+        ], $tickets);
         ?>
-        <div class="wrap">
+        <div class="wrap dizzy-ticket-list-admin">
             <h1><?php esc_html_e('Tickets', 'dizzy-ticket-manager'); ?></h1>
-            <table class="widefat striped">
-                <thead><tr><th><?php esc_html_e('Ticket', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Holder', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Type', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event date', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Status', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Created', 'dizzy-ticket-manager'); ?></th></tr></thead>
-                <tbody>
-                <?php foreach ($this->repository->allTickets() as $ticket) : $code = (string) $ticket['ticket_code']; ?>
-                    <tr>
-                        <td><code><?php echo esc_html(strtoupper(substr($code, 0, 12))); ?></code></td>
-                        <td><?php echo esc_html((string) $ticket['holder_name']); ?><br><?php echo esc_html((string) $ticket['holder_email']); ?></td>
-                        <td><?php echo esc_html((string) ($ticket['ticket_name'] ?: '—')); ?></td>
-                        <td><?php echo esc_html((string) $ticket['post_title']); ?></td>
-                        <td><?php echo esc_html((string) $ticket['start_datetime']); ?></td>
-                        <td><?php echo esc_html(empty($ticket['checked_in_at']) ? __('Valid', 'dizzy-ticket-manager') : __('Checked in', 'dizzy-ticket-manager')); ?></td>
-                        <td><?php echo esc_html((string) $ticket['created_at']); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="dizzy-ticket-list-workspace">
+                <section class="dizzy-ticket-list-panel">
+                    <div class="dizzy-ticket-list-heading">
+                        <div>
+                            <h2 id="dizzy-tickets-list-title"><?php esc_html_e('All Tickets', 'dizzy-ticket-manager'); ?></h2>
+                            <div class="dizzy-ticket-list-summary">
+                                <span><?php esc_html_e('Total tickets:', 'dizzy-ticket-manager'); ?> <strong id="dizzy-tickets-total"><?php echo esc_html((string) count($tickets)); ?></strong></span>
+                                <span><?php esc_html_e('Checked-in:', 'dizzy-ticket-manager'); ?> <strong id="dizzy-tickets-secondary"><?php echo esc_html((string) count(array_filter($calendarRows, static fn (array $row): bool => $row['checked']))); ?></strong></span>
+                            </div>
+                        </div>
+                        <button type="button" class="button-link" id="dizzy-tickets-show-all"><?php esc_html_e('Show all', 'dizzy-ticket-manager'); ?></button>
+                    </div>
+                    <div class="dizzy-ticket-list-table-wrap">
+                        <table class="widefat striped">
+                            <thead><tr><th><?php esc_html_e('Ticket', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Holder', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Type', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event date', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Status', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Created', 'dizzy-ticket-manager'); ?></th></tr></thead>
+                            <tbody>
+                            <?php foreach ($tickets as $ticket) : $code = (string) $ticket['ticket_code']; $date = substr((string) ($ticket['start_datetime'] ?? ''), 0, 10); ?>
+                                <tr data-tickets-date="<?php echo esc_attr($date); ?>">
+                                    <td><code><?php echo esc_html(strtoupper(substr($code, 0, 12))); ?></code></td>
+                                    <td><?php echo esc_html((string) $ticket['holder_name']); ?><br><?php echo esc_html((string) $ticket['holder_email']); ?></td>
+                                    <td><?php echo esc_html((string) ($ticket['ticket_name'] ?: '—')); ?></td>
+                                    <td><?php echo esc_html((string) $ticket['post_title']); ?></td>
+                                    <td><?php echo esc_html((string) $ticket['start_datetime']); ?></td>
+                                    <td><?php echo esc_html(empty($ticket['checked_in_at']) ? __('Valid', 'dizzy-ticket-manager') : __('Checked in', 'dizzy-ticket-manager')); ?></td>
+                                    <td><?php echo esc_html((string) $ticket['created_at']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <tr id="dizzy-tickets-empty" hidden><td colspan="7"><?php esc_html_e('No tickets for this date.', 'dizzy-ticket-manager'); ?></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                <aside class="dizzy-ticket-list-calendar-column"><?php $this->listCalendar($calendarRows, 'tickets'); ?></aside>
+            </div>
         </div>
         <?php
     }
@@ -99,14 +122,162 @@ final class TicketSalesAdmin
     public function ordersPage(): void
     {
         $this->guard(ControllerRole::TICKETS_CAP);
+        $orders = $this->repository->allOrders();
+        $calendarRows = array_map(static fn (array $order): array => [
+            'date' => substr((string) ($order['start_datetime'] ?? ''), 0, 10),
+            'paid' => (string) ($order['status'] ?? '') === 'paid',
+            'amount' => (float) ($order['total_amount'] ?? 0),
+        ], $orders);
         ?>
-        <div class="wrap">
+        <div class="wrap dizzy-ticket-list-admin">
             <h1><?php esc_html_e('Ticket Orders', 'dizzy-ticket-manager'); ?></h1>
-            <table class="widefat striped">
-                <thead><tr><th>ID</th><th><?php esc_html_e('Customer', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Amount', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Status', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Created', 'dizzy-ticket-manager'); ?></th></tr></thead>
-                <tbody><?php foreach ($this->repository->allOrders() as $order) : ?><tr><td>#<?php echo esc_html((string) $order['id']); ?></td><td><?php echo esc_html((string) $order['customer_name']); ?><br><?php echo esc_html((string) $order['customer_email']); ?></td><td><?php echo esc_html(get_the_title((int) $order['event_id'])); ?></td><td><?php echo esc_html((string) $order['currency'] . ' ' . (string) $order['total_amount']); ?></td><td><?php echo esc_html(ucfirst((string) $order['status'])); ?></td><td><?php echo esc_html((string) $order['created_at']); ?></td></tr><?php endforeach; ?></tbody>
-            </table>
+            <div class="dizzy-ticket-list-workspace">
+                <section class="dizzy-ticket-list-panel">
+                    <div class="dizzy-ticket-list-heading">
+                        <div>
+                            <h2 id="dizzy-orders-list-title"><?php esc_html_e('All Ticket Orders', 'dizzy-ticket-manager'); ?></h2>
+                            <div class="dizzy-ticket-list-summary">
+                                <span><?php esc_html_e('Total orders:', 'dizzy-ticket-manager'); ?> <strong id="dizzy-orders-total"><?php echo esc_html((string) count($orders)); ?></strong></span>
+                                <span><?php esc_html_e('Paid orders:', 'dizzy-ticket-manager'); ?> <strong id="dizzy-orders-secondary"><?php echo esc_html((string) count(array_filter($calendarRows, static fn (array $row): bool => $row['paid']))); ?></strong></span>
+                                <span><?php esc_html_e('Revenue:', 'dizzy-ticket-manager'); ?> EUR <strong id="dizzy-orders-revenue"><?php echo esc_html(number_format_i18n(array_sum(array_column($calendarRows, 'amount')), 2)); ?></strong></span>
+                            </div>
+                        </div>
+                        <button type="button" class="button-link" id="dizzy-orders-show-all"><?php esc_html_e('Show all', 'dizzy-ticket-manager'); ?></button>
+                    </div>
+                    <div class="dizzy-ticket-list-table-wrap">
+                        <table class="widefat striped">
+                            <thead><tr><th>ID</th><th><?php esc_html_e('Customer', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Event date', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Amount', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Status', 'dizzy-ticket-manager'); ?></th><th><?php esc_html_e('Created', 'dizzy-ticket-manager'); ?></th></tr></thead>
+                            <tbody>
+                            <?php foreach ($orders as $order) : $date = substr((string) ($order['start_datetime'] ?? ''), 0, 10); ?>
+                                <tr data-orders-date="<?php echo esc_attr($date); ?>">
+                                    <td>#<?php echo esc_html((string) $order['id']); ?></td>
+                                    <td><?php echo esc_html((string) $order['customer_name']); ?><br><?php echo esc_html((string) $order['customer_email']); ?></td>
+                                    <td><?php echo esc_html((string) ($order['post_title'] ?: get_the_title((int) $order['event_id']))); ?></td>
+                                    <td><?php echo esc_html((string) ($order['start_datetime'] ?: '—')); ?></td>
+                                    <td><?php echo esc_html((string) $order['currency'] . ' ' . (string) $order['total_amount']); ?></td>
+                                    <td><?php echo esc_html(ucfirst((string) $order['status'])); ?></td>
+                                    <td><?php echo esc_html((string) $order['created_at']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <tr id="dizzy-orders-empty" hidden><td colspan="7"><?php esc_html_e('No ticket orders for this date.', 'dizzy-ticket-manager'); ?></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                <aside class="dizzy-ticket-list-calendar-column"><?php $this->listCalendar($calendarRows, 'orders'); ?></aside>
+            </div>
         </div>
+        <?php
+    }
+
+    private function listCalendar(array $rows, string $kind): void
+    {
+        $isTickets = $kind === 'tickets';
+        $itemLabel = $isTickets ? __('tickets', 'dizzy-ticket-manager') : __('orders', 'dizzy-ticket-manager');
+        $allLabel = $isTickets ? __('All Tickets', 'dizzy-ticket-manager') : __('All Ticket Orders', 'dizzy-ticket-manager');
+        ?>
+        <style>
+            .dizzy-ticket-list-workspace{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(460px,.9fr);gap:24px;align-items:start;margin-top:14px}
+            .dizzy-ticket-list-panel,.dizzy-list-calendar-surface{background:#fff;border:1px solid #c3c4c7}
+            .dizzy-ticket-list-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:12px;border-bottom:1px solid #c3c4c7}
+            .dizzy-ticket-list-heading h2{margin:0 0 8px;font-size:14px}.dizzy-ticket-list-summary{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.dizzy-ticket-list-summary span{color:#50575e}.dizzy-ticket-list-summary strong{color:#1d2327}
+            .dizzy-ticket-list-table-wrap{overflow-x:auto}.dizzy-ticket-list-table-wrap .widefat{border:0}.dizzy-ticket-list-table-wrap .widefat tbody td{vertical-align:middle}.dizzy-ticket-list-table-wrap tr.is-calendar-hidden{display:none}
+            .dizzy-list-calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.dizzy-list-calendar-nav{display:flex;align-items:center;gap:8px}
+            .dizzy-list-calendar-month{min-width:150px;text-align:center;font-size:15px;font-weight:600;text-transform:capitalize}
+            .dizzy-list-calendar-weekdays,.dizzy-list-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+            .dizzy-list-calendar-weekdays div{padding:10px 4px;text-align:center;font-size:12px;font-weight:600;border-bottom:1px solid #dcdcde}
+            .dizzy-list-calendar-day{position:relative;min-height:72px;padding:7px;border:0;border-right:1px solid #e2e4e7;border-bottom:1px solid #e2e4e7;background:#fff;color:#1d2327;text-align:left;cursor:pointer}
+            .dizzy-list-calendar-day:nth-child(7n){border-right:0}.dizzy-list-calendar-day:hover{background:#f6f7f7}.dizzy-list-calendar-day.is-selected{background:#eef5ff;box-shadow:inset 0 0 0 2px #2271b1}
+            .dizzy-list-calendar-day.is-other{color:#8c8f94;background:#fafafa}.dizzy-list-calendar-day-number{font-weight:600}
+            .dizzy-list-calendar-count{display:block;width:max-content;max-width:100%;margin-top:15px;padding:3px 6px;border-radius:10px;background:#e7f3ff;font-size:10px;white-space:nowrap}.dizzy-list-calendar-count.is-busy{background:#fff0d5}
+            @media(max-width:1300px){.dizzy-ticket-list-workspace{grid-template-columns:minmax(0,1.35fr) minmax(400px,.9fr)}.dizzy-list-calendar-day{min-height:64px}}
+            @media(max-width:1050px){.dizzy-ticket-list-workspace{display:flex;flex-direction:column-reverse}.dizzy-ticket-list-panel,.dizzy-ticket-list-calendar-column{width:100%}}
+            @media(max-width:600px){.dizzy-list-calendar-day{min-height:52px;padding:4px}.dizzy-list-calendar-count{overflow:hidden;margin-top:5px;padding:0;width:8px;height:8px;text-indent:-9999px}.dizzy-list-calendar-toolbar{align-items:flex-start;flex-direction:column}}
+        </style>
+        <div class="dizzy-list-calendar-toolbar">
+            <div class="dizzy-list-calendar-nav">
+                <button type="button" class="button" id="dizzy-<?php echo esc_attr($kind); ?>-calendar-prev" aria-label="<?php esc_attr_e('Previous month', 'dizzy-ticket-manager'); ?>">‹</button>
+                <div class="dizzy-list-calendar-month" id="dizzy-<?php echo esc_attr($kind); ?>-calendar-month"></div>
+                <button type="button" class="button" id="dizzy-<?php echo esc_attr($kind); ?>-calendar-next" aria-label="<?php esc_attr_e('Next month', 'dizzy-ticket-manager'); ?>">›</button>
+            </div>
+            <button type="button" class="button" id="dizzy-<?php echo esc_attr($kind); ?>-calendar-today"><?php esc_html_e('Today', 'dizzy-ticket-manager'); ?></button>
+        </div>
+        <div class="dizzy-list-calendar-surface">
+            <div class="dizzy-list-calendar-weekdays"><?php foreach ([__('Mon', 'dizzy-ticket-manager'), __('Tue', 'dizzy-ticket-manager'), __('Wed', 'dizzy-ticket-manager'), __('Thu', 'dizzy-ticket-manager'), __('Fri', 'dizzy-ticket-manager'), __('Sat', 'dizzy-ticket-manager'), __('Sun', 'dizzy-ticket-manager')] as $day) : ?><div><?php echo esc_html($day); ?></div><?php endforeach; ?></div>
+            <div class="dizzy-list-calendar-grid" id="dizzy-<?php echo esc_attr($kind); ?>-calendar-grid"></div>
+        </div>
+        <script>
+        (() => {
+            const kind = <?php echo wp_json_encode($kind); ?>;
+            const rows = <?php echo wp_json_encode($rows); ?>;
+            const grid = document.getElementById('dizzy-' + kind + '-calendar-grid');
+            if (!grid) return;
+            const monthLabel = document.getElementById('dizzy-' + kind + '-calendar-month');
+            const listTitle = document.getElementById('dizzy-' + kind + '-list-title');
+            const showAll = document.getElementById('dizzy-' + kind + '-show-all');
+            const totalEl = document.getElementById('dizzy-' + kind + '-total');
+            const secondaryEl = document.getElementById('dizzy-' + kind + '-secondary');
+            const revenueEl = document.getElementById('dizzy-' + kind + '-revenue');
+            const tableRows = Array.from(document.querySelectorAll('[data-' + kind + '-date]'));
+            const emptyRow = document.getElementById('dizzy-' + kind + '-empty');
+            const locale = <?php echo wp_json_encode(str_replace('_', '-', determine_locale())); ?>;
+            const allLabel = <?php echo wp_json_encode($allLabel); ?>;
+            const itemLabel = <?php echo wp_json_encode($itemLabel); ?>;
+            const grouped = {};
+            rows.forEach(row => { if (/^\d{4}-\d{2}-\d{2}$/.test(row.date)) (grouped[row.date] ||= []).push(row); });
+            const now = new Date();
+            let view = new Date(now.getFullYear(), now.getMonth(), 1);
+            let selected = '';
+
+            function localKey(date) {
+                return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+            }
+
+            function filterList() {
+                let visible = 0;
+                tableRows.forEach(row => {
+                    const show = !selected || row.getAttribute('data-' + kind + '-date') === selected;
+                    row.classList.toggle('is-calendar-hidden', !show);
+                    if (show) visible++;
+                });
+                emptyRow.hidden = !selected || visible > 0;
+                const filtered = selected ? rows.filter(row => row.date === selected) : rows;
+                totalEl.textContent = String(filtered.length);
+                secondaryEl.textContent = String(filtered.filter(row => kind === 'tickets' ? row.checked : row.paid).length);
+                if (revenueEl) revenueEl.textContent = new Intl.NumberFormat(locale, {minimumFractionDigits:2, maximumFractionDigits:2}).format(filtered.reduce((sum, row) => sum + Number(row.amount || 0), 0));
+                showAll.hidden = !selected;
+                listTitle.textContent = selected ? new Intl.DateTimeFormat(locale, {weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(selected + 'T12:00:00')) : allLabel;
+            }
+
+            function renderCalendar() {
+                monthLabel.textContent = new Intl.DateTimeFormat(locale, {month:'long',year:'numeric'}).format(view);
+                grid.innerHTML = '';
+                const first = new Date(view.getFullYear(), view.getMonth(), 1);
+                const offset = (first.getDay() + 6) % 7;
+                const start = new Date(view.getFullYear(), view.getMonth(), 1 - offset);
+                for (let index = 0; index < 42; index++) {
+                    const date = new Date(start); date.setDate(start.getDate() + index);
+                    const key = localKey(date); const entries = grouped[key] || [];
+                    const button = document.createElement('button'); button.type = 'button';
+                    button.className = 'dizzy-list-calendar-day' + (date.getMonth() !== view.getMonth() ? ' is-other' : '') + (key === selected ? ' is-selected' : '');
+                    button.setAttribute('aria-label', date.toDateString() + (entries.length ? ', ' + entries.length + ' ' + itemLabel : ''));
+                    const number = document.createElement('span'); number.className = 'dizzy-list-calendar-day-number'; number.textContent = String(date.getDate()); button.appendChild(number);
+                    if (entries.length) {
+                        const count = document.createElement('span'); count.className = 'dizzy-list-calendar-count' + (entries.length >= 10 ? ' is-busy' : '');
+                        count.textContent = entries.length + ' ' + itemLabel; button.appendChild(count);
+                    }
+                    button.addEventListener('click', () => { selected = key; if (date.getMonth() !== view.getMonth()) view = new Date(date.getFullYear(), date.getMonth(), 1); renderCalendar(); filterList(); });
+                    grid.appendChild(button);
+                }
+            }
+
+            showAll.addEventListener('click', () => { selected = ''; renderCalendar(); filterList(); });
+            document.getElementById('dizzy-' + kind + '-calendar-prev').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderCalendar(); });
+            document.getElementById('dizzy-' + kind + '-calendar-next').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); renderCalendar(); });
+            document.getElementById('dizzy-' + kind + '-calendar-today').addEventListener('click', () => { const today = new Date(); view = new Date(today.getFullYear(), today.getMonth(), 1); selected = localKey(today); renderCalendar(); filterList(); });
+            renderCalendar(); filterList();
+        })();
+        </script>
         <?php
     }
 
