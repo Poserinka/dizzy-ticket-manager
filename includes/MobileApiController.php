@@ -107,8 +107,32 @@ final class MobileApiController
             return new WP_REST_Response(['result' => 'invalid'], 400);
         }
 
+        $ticket = $this->repository->ticketForCheckIn($code);
+
+        if ($ticket === null || ($ticket['status'] ?? '') !== 'valid') {
+            return new WP_REST_Response(['result' => 'invalid'], 404);
+        }
+
+        $eventDate = ! empty($ticket['start_datetime'])
+            ? wp_date('Y-m-d', strtotime((string) $ticket['start_datetime']))
+            : '';
+
+        if ($eventDate === '' || $eventDate !== current_time('Y-m-d')) {
+            return new WP_REST_Response([
+                'result' => 'wrong_day',
+                'event_date' => $eventDate,
+                'event' => (string) ($ticket['post_title'] ?? ''),
+            ], 409);
+        }
+
         $result = $this->repository->checkInTicket($code, get_current_user_id());
-        return new WP_REST_Response(['result' => $result], $result === 'invalid' ? 404 : 200);
+
+        return new WP_REST_Response([
+            'result' => $result,
+            'holder_name' => (string) ($ticket['holder_name'] ?? ''),
+            'event' => (string) ($ticket['post_title'] ?? ''),
+            'event_date' => $eventDate,
+        ], $result === 'invalid' ? 404 : 200);
     }
 
     public function undo(WP_REST_Request $request): WP_REST_Response
