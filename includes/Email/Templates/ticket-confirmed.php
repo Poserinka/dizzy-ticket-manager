@@ -89,23 +89,23 @@ a[x-apple-data-detectors],
         <tbody>
          <tr>
           <td align="center" style="padding:0;Margin:0">
-           <table bgcolor="#ffffff" align="center" cellpadding="0" cellspacing="0" class="es-content-body" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;background-color:#FFFFFF;width:600px">
-            <tbody>
-             <tr>
-              <td align="left" style="padding:15px 20px 0;Margin:0">
-               <table cellpadding="0" cellspacing="0" width="100%" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
-                <tbody>
-                 <tr>
-                  <td align="center" valign="top" style="padding:0;Margin:0;width:560px">
-                   <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
-                    <tbody>
-                     <tr>
-                      <td align="center" style="padding:10px 0;Margin:0;font-size:0px"><img src="<?php echo plugin_dir_url( __DIR__ ).'Templates/images/jazzcafe-dizzy-logo-black.png'; ?>" alt="" width="484" class="adapt-img" style="display:block;font-size:14px;border:0;outline:none;text-decoration:none;margin:0"></td>
+<table bgcolor="#ffffff" align="center" cellpadding="0" cellspacing="0" class="es-content-body" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;background-color:#FFFFFF;width:600px">
+	<tbody>
+		<tr>
+			<td align="left" bgcolor="#efefef" style="padding:15px 20px 0;Margin:0;background-color:#efefef;background:linear-gradient(0deg, #EFEFEF 0%, #FFFFFF 100%)">
+				<table cellpadding="0" cellspacing="0" width="100%" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
+					<tbody>
+						<tr>
+							<td align="center" valign="top" style="padding:0;Margin:0;width:560px">
+								<table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
+									<tbody>
+										<tr>
+						<td align="center" style="padding:20px 0;Margin:0;font-size:0px"><img src="<?php echo plugin_dir_url( __DIR__ ).'Templates/images/jazzcafe-dizzy-logo-black.png'; ?>" alt="" width="484" class="adapt-img" style="display:block;font-size:14px;border:0;outline:none;text-decoration:none;margin:0"></td>
                      </tr>
-                     <tr>
+					 <tr>
                       <td align="center" class="es-m-p0r es-m-p0l" style="Margin:0;padding:15px 40px"><h2 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:26px;font-style:normal;font-weight:bold;line-height:31px;color:#333333"><br></h2><h2 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:26px;font-style:normal;font-weight:bold;line-height:31px;color:#333333"><?php esc_html_e('Your tickets are ready', 'dizzy-ticket-manager'); ?></h2><h2 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:26px;font-style:normal;font-weight:bold;line-height:31px;color:#333333"><br></h2></td>
                      </tr>
-                     <tr>
+					 <tr>
                       <td align="center" style="padding:10px 0;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) $event_date); ?></h3></td>
                      </tr>
                      <tr>
@@ -121,13 +121,13 @@ a[x-apple-data-detectors],
                </table></td>
              </tr>
              <tr>
-              <td align="left" style="padding:0 20px 20px;Margin:0">
-               <table cellpadding="0" cellspacing="0" width="100%" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
-                <tbody>
-                 <tr>
-                  <td align="center" valign="top" style="padding:0;Margin:0;width:560px">
-                   <table cellpadding="0" cellspacing="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;border-radius:5px;border-collapse:separate" role="presentation">
-                    <tbody>
+<td align="left" bgcolor="#efefef" style="padding:0 20px 20px;Margin:0;background-color:#efefef;background:linear-gradient(0deg, #EFEFEF 0%, #EFEFEF 100%)">
+	<table cellpadding="0" cellspacing="0" width="100%" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
+		<tbody>
+			<tr>
+				<td align="center" valign="top" style="padding:0;Margin:0;width:560px">
+					<table cellpadding="0" cellspacing="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;border-radius:5px;border-collapse:separate" role="presentation">
+						<tbody>
 					<?php foreach ((array) $tickets as $index => $ticket) : ?>	
 					 <tr>
                       <td align="center" style="padding:10px 0 5px;Margin:0"><h3 class="es-m-txt-c" style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:30px;color:#333333"><?php echo esc_html((string) ($ticket['label'] ?? '')); ?></h3></td>
@@ -168,23 +168,23 @@ a[x-apple-data-detectors],
          </tr>
         </tbody>
        </table>
-       <table cellpadding="0" cellspacing="0" align="center" class="es-footer" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;width:100%;table-layout:fixed !important;background-color:transparent;background-repeat:repeat;background-position:center top">
-        <tbody>
-         <tr>
-          <td align="center" style="padding:0;Margin:0">
-           <table cellspacing="0" align="center" cellpadding="0" class="es-footer-body" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;background-color:transparent;width:600px" role="none">
-            <tbody>
-             <tr>
-              <td align="left" style="padding:20px 20px 0;Margin:0">
-               <table width="100%" cellpadding="0" cellspacing="0" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
-                <tbody>
-                 <tr>
-                  <td align="left" style="padding:0;Margin:0;width:560px">
-                   <table cellspacing="0" width="100%" cellpadding="0" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
-                    <tbody>
-                     <tr>
-                      <td align="center" style="padding:15px 0;Margin:0;font-size:0">
-                       <table cellpadding="0" cellspacing="0" class="es-table-not-adapt es-social" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
+<table cellpadding="0" cellspacing="0" align="center" class="es-footer" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;width:100%;table-layout:fixed !important;background-color:transparent;background-repeat:repeat;background-position:center top">
+	<tbody>
+		<tr>
+			<td align="center" style="padding:0;Margin:0">
+				<table cellspacing="0" align="center" cellpadding="0" class="es-footer-body" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;background-color:transparent;width:600px" role="none">
+					<tbody>
+						<tr>
+							<td align="left" bgcolor="#ffffff" style="padding:20px 20px 0;Margin:0;background-color:#ffffff;background:linear-gradient(0deg, #FFFFFF 0%, #EFEFEF 100%)">
+								<table width="100%" cellpadding="0" cellspacing="0" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
+									<tbody>
+										<tr>
+											<td align="left" style="padding:0;Margin:0;width:560px">
+												<table cellspacing="0" width="100%" cellpadding="0" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
+													<tbody>
+														<tr>
+															<td align="center" style="padding:15px 0;Margin:0;font-size:0">
+																<table cellpadding="0" cellspacing="0" class="es-table-not-adapt es-social" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
                         <tbody>
                          <tr>
                           <td align="center" valign="top" class="es-m-p40r" style="padding:0 40px 0 0;Margin:0"><a href="https://www.facebook.com/DizzyJazz/" target="_blank" style="mso-line-height-rule:exactly;text-decoration:underline;color:#333333;font-size:12px;font-weight:inherit"><img alt="Fb" width="32" title="Facebook" src="<?php echo plugin_dir_url( __DIR__ ).'Templates/images/facebook-logo-black.png'; ?>" style="display:block;font-size:14px;border:0;outline:none;text-decoration:none;margin:0"></a></td>
@@ -229,34 +229,7 @@ a[x-apple-data-detectors],
          </tr>
         </tbody>
        </table>
-       <table cellpadding="0" cellspacing="0" align="center" class="es-content" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;width:100%;table-layout:fixed !important">
-        <tbody>
-         <tr>
-          <td align="center" class="es-info-area" style="padding:0;Margin:0">
-           <table align="center" cellpadding="0" cellspacing="0" bgcolor="#00000000" class="es-content-body" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;background-color:transparent;width:600px" role="none">
-            <tbody>
-             <tr>
-              <td align="left" style="padding:20px;Margin:0">
-               <table cellpadding="0" cellspacing="0" width="100%" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
-                <tbody>
-                 <tr>
-                  <td align="center" valign="top" style="padding:0;Margin:0;width:560px">
-                   <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
-                    <tbody>
-                     <tr>
-                      <td align="center" class="es-infoblock" style="padding:0;Margin:0"><p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:18px;letter-spacing:0;font-weight:normal;color:#CCCCCC;font-size:12px">No longer want to receive these emails?&nbsp;<a href="https://dizzy.nl/unsubscribe" target="_blank" style="mso-line-height-rule:exactly;text-decoration:underline;color:#CCCCCC;font-size:12px;font-weight:inherit">Unsubscribe</a>.</p></td>
-                     </tr>
-                    </tbody>
-                   </table></td>
-                 </tr>
-                </tbody>
-               </table></td>
-             </tr>
-            </tbody>
-           </table></td>
-         </tr>
-        </tbody>
-       </table></td>
+</td>
      </tr>
     </tbody>
    </table>
