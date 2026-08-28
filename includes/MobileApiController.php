@@ -113,9 +113,7 @@ final class MobileApiController
             return new WP_REST_Response(['result' => 'invalid'], 404);
         }
 
-        $eventDate = ! empty($ticket['start_datetime'])
-            ? wp_date('Y-m-d', strtotime((string) $ticket['start_datetime']))
-            : '';
+        $eventDate = substr((string) ($ticket['start_datetime'] ?? ''), 0, 10);
 
         if ($eventDate === '' || $eventDate !== current_time('Y-m-d')) {
             return new WP_REST_Response([
