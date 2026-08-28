@@ -315,6 +315,26 @@ final class TicketSalesRepository
         return is_array($row) ? $row : null;
     }
 
+    public function ticketForCheckIn(string $code): ?array
+    {
+        global $wpdb;
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT t.*,i.ticket_name,p.post_title,occ.start_datetime
+                FROM {$this->tickets} t
+                LEFT JOIN {$this->items} i ON i.id=t.order_item_id
+                LEFT JOIN {$wpdb->posts} p ON p.ID=t.event_id
+                LEFT JOIN {$wpdb->prefix}dizzy_event_occurrences occ ON occ.id=t.occurrence_id
+                WHERE t.ticket_code=%s
+                LIMIT 1",
+                $code
+            ),
+            ARRAY_A
+        );
+
+        return is_array($row) ? $row : null;
+    }
+
     public function applyPayment(array $payment): array
     {
         global $wpdb;
