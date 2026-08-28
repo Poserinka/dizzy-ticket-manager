@@ -85,34 +85,6 @@ a[x-apple-data-detectors],
     <tbody>
      <tr>
       <td valign="top" style="padding:0;Margin:0">
-       <table cellpadding="0" cellspacing="0" align="center" class="es-header" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;width:100%;table-layout:fixed !important;background-color:transparent;background-repeat:repeat;background-position:center top">
-        <tbody>
-         <tr>
-          <td align="center" style="padding:0;Margin:0">
-           <table bgcolor="#ffffff" align="center" cellpadding="0" cellspacing="0" class="es-header-body" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;background-color:transparent;width:600px">
-            <tbody>
-             <tr>
-              <td align="left" style="padding:20px;Margin:0">
-               <table cellpadding="0" cellspacing="0" width="100%" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
-                <tbody>
-                 <tr>
-                  <td valign="top" align="center" class="es-m-p0r" style="padding:0;Margin:0;width:560px">
-                   <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
-                    <tbody>
-                     <tr>
-                      <td align="center" style="padding:0 0 10px;Margin:0;font-size:0px"><img src="<?php echo plugin_dir_url( __DIR__ ).'Templates/images/jazzcafe-dizzy-logo-black.png'; ?>" alt="Logo" width="246" title="Logo" class="adapt-img" style="display:block;font-size:12px;border:0;outline:none;text-decoration:none;margin:0"></td>
-                     </tr>
-                    </tbody>
-                   </table></td>
-                 </tr>
-                </tbody>
-               </table></td>
-             </tr>
-            </tbody>
-           </table></td>
-         </tr>
-        </tbody>
-       </table>
        <table cellpadding="0" cellspacing="0" align="center" class="es-content" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;width:100%;table-layout:fixed !important">
         <tbody>
          <tr>
