@@ -16,7 +16,7 @@ final class CheckInRoute
     public function dispatch(): void
     {
         $requestPath = (string) wp_parse_url(
-            home_url((string) wp_unslash($_SERVER['REQUEST_URI'] ?? '/')),
+            (string) wp_unslash($_SERVER['REQUEST_URI'] ?? '/'),
             PHP_URL_PATH
         );
         $checkInPath = (string) wp_parse_url(home_url('/check-in/'), PHP_URL_PATH);
