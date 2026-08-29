@@ -37,6 +37,7 @@ final class Plugin
         (new TicketSalesController($repository, $service, $events))->register();
         (new MobileApiController($repository))->register();
         (new CheckInWebApp())->register();
+        (new CheckInRoute())->register();
         (new TicketExperience($repository))->register();
 
         if (is_admin()) {
