@@ -4,9 +4,9 @@ Ticket sales, Mollie payments, QR tickets, reports and attendance management for
 
 ## Mobile web check-in
 
-After activating version 1.8.0 or newer, open:
+After activating version 1.8.1 or newer, open:
 
-`https://your-site.example/ticket-check-in/`
+`https://your-site.example/check-in/`
 
 Sign in with an Administrator or Controller account. The page shows today's attendance totals and tickets, supports QR scanning with the rear camera, and includes manual ticket URL/code entry as a fallback.
 
