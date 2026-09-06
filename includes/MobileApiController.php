@@ -14,7 +14,7 @@ final class MobileApiController
 {
     private const NAMESPACE = 'dizzy-controller/v1';
 
-    public function __construct(private TicketSalesRepository $repository)
+    public function __construct(private TicketSalesRepository $repository, private MobileAuth $auth)
     {
     }
 
@@ -25,6 +25,21 @@ final class MobileApiController
 
     public function routes(): void
     {
+        register_rest_route(self::NAMESPACE, '/login', [
+            'methods' => WP_REST_Server::CREATABLE,
+            'callback' => [$this, 'login'],
+            'permission_callback' => '__return_true',
+        ]);
+        register_rest_route(self::NAMESPACE, '/logout', [
+            'methods' => WP_REST_Server::CREATABLE,
+            'callback' => [$this, 'logout'],
+            'permission_callback' => [$this, 'canManage'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/session', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'session'],
+            'permission_callback' => [$this, 'canManage'],
+        ]);
         register_rest_route(self::NAMESPACE, '/tickets', [
             'methods' => WP_REST_Server::READABLE,
             'callback' => [$this, 'tickets'],
@@ -57,6 +72,30 @@ final class MobileApiController
     public function canManage(): bool
     {
         return current_user_can(ControllerRole::TICKETS_CAP);
+    }
+
+    public function login(WP_REST_Request $request): WP_REST_Response|\WP_Error
+    {
+        $username = sanitize_user((string) $request->get_param('username'));
+        $password = (string) $request->get_param('password');
+
+        if ($username === '' || $password === '') {
+            return new \WP_Error('dizzy_mobile_missing_login', __('Username and password are required.', 'dizzy-ticket-manager'), ['status' => 400]);
+        }
+
+        $result = $this->auth->login($username, $password);
+        return $result instanceof \WP_Error ? $result : new WP_REST_Response($result);
+    }
+
+    public function logout(): WP_REST_Response
+    {
+        $this->auth->logout();
+        return new WP_REST_Response(['ok' => true]);
+    }
+
+    public function session(): WP_REST_Response
+    {
+        return new WP_REST_Response($this->auth->userData(wp_get_current_user()));
     }
 
     public function tickets(WP_REST_Request $request): WP_REST_Response

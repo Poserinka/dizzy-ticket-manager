@@ -30,12 +30,14 @@ final class Plugin
         }
 
         $repository = new TicketSalesRepository();
+        $mobileAuth = new MobileAuth();
+        $mobileAuth->register();
         $mailer = new Mailer();
         $mollie = new MollieClient();
         $service = new TicketSalesService($events, $repository, $mollie, $mailer);
 
         (new TicketSalesController($repository, $service, $events))->register();
-        (new MobileApiController($repository))->register();
+        (new MobileApiController($repository, $mobileAuth))->register();
         (new CheckInWebApp())->register();
         (new CheckInRoute())->register();
         (new TicketExperience($repository))->register();
