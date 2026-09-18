@@ -107,7 +107,12 @@ final class TicketSalesService
         $order = $this->repository->applyPayment($payment);
         do_action('dizzy_ticket_order_status_changed', $order, $before);
 
-        if (
+        if (($order['status'] ?? '') === 'paid' && ($order['sales_channel'] ?? 'online') === 'door') {
+            $this->repository->checkInOrderTickets(
+                (int) $order['id'],
+                max(1, (int) ($order['created_by'] ?? 0))
+            );
+        } elseif (
             ($order['status'] ?? '') === 'paid'
             && $this->repository->claimConfirmationEmail((int) $order['id'])
         ) {
@@ -117,6 +122,117 @@ final class TicketSalesService
         }
 
         return $order;
+    }
+
+    public function doorSaleOptions(): array
+    {
+        $result = [];
+        $seenEvents = [];
+
+        foreach ($this->events->allUpcoming() as $occurrence) {
+            $eventId = (int) $occurrence['event_id'];
+            if (isset($seenEvents[$eventId])) {
+                continue;
+            }
+            $seenEvents[$eventId] = true;
+            $occurrenceId = (int) $occurrence['id'];
+            $this->repository->syncFromEvent($eventId, $occurrenceId);
+            $types = [];
+
+            foreach ($this->repository->activeTypes($eventId) as $type) {
+                if ((int) $type['occurrence_id'] !== $occurrenceId || (float) $type['price'] <= 0) {
+                    continue;
+                }
+                $types[] = [
+                    'id' => (int) $type['id'],
+                    'name' => (string) $type['name'],
+                    'price' => number_format((float) $type['price'], 2, '.', ''),
+                    'currency' => (string) $type['currency'],
+                ];
+            }
+
+            if ($types !== []) {
+                $result[] = [
+                    'event_id' => $eventId,
+                    'occurrence_id' => $occurrenceId,
+                    'title' => (string) $occurrence['post_title'],
+                    'start' => (string) $occurrence['start_datetime'],
+                    'ticket_types' => $types,
+                ];
+            }
+        }
+
+        return ['terminal_configured' => $this->mollie->configuredForPos(), 'events' => $result];
+    }
+
+    public function startDoorSale(array $data, int $userId): array
+    {
+        $eventId = absint($data['event_id'] ?? 0);
+        $typeId = absint($data['ticket_type_id'] ?? 0);
+        $quantity = min(20, max(1, absint($data['quantity'] ?? 1)));
+        $type = $this->repository->findType($typeId);
+
+        if (! is_array($type) || (int) $type['event_id'] !== $eventId || (int) $type['active'] !== 1) {
+            throw new RuntimeException('Selected ticket is unavailable.');
+        }
+
+        $occurrence = $this->events->occurrence($eventId, (int) $type['occurrence_id']);
+        if ($occurrence === null || (float) $type['price'] <= 0) {
+            throw new RuntimeException('Selected event occurrence is unavailable.');
+        }
+        if (! $this->mollie->configuredForPos()) {
+            throw new RuntimeException('Mollie Tap terminal is not configured.');
+        }
+
+        $name = sanitize_text_field((string) ($data['name'] ?? '')) ?: __('Door customer', 'dizzy-ticket-manager');
+        $email = sanitize_email((string) ($data['email'] ?? ''));
+        if ($email === '') {
+            $email = 'door-sale@invalid.local';
+        }
+
+        $order = $this->repository->createPendingOrder(
+            $type,
+            $quantity,
+            ['name' => $name, 'email' => $email, 'phone' => ''],
+            ['sales_channel' => 'door', 'payment_method' => 'mollie_tap', 'created_by' => $userId]
+        );
+
+        $payment = $this->mollie->createPayment([
+            'amount' => ['currency' => $order['currency'], 'value' => $order['total']],
+            'description' => sprintf('Door sale: %s', get_the_title($eventId)),
+            'redirectUrl' => home_url('/'),
+            'webhookUrl' => rest_url('dizzy-tickets/v1/mollie/webhook'),
+            'method' => 'pointofsale',
+            'terminalId' => $this->mollie->terminalId(),
+            'metadata' => ['order_id' => $order['id'], 'sales_channel' => 'door'],
+        ]);
+        $this->repository->addPayment((int) $order['id'], $payment);
+
+        return [
+            'order_id' => (int) $order['id'],
+            'payment_id' => (string) $payment['id'],
+            'status' => (string) ($payment['status'] ?? 'open'),
+            'amount' => (string) $order['total'],
+            'currency' => (string) $order['currency'],
+        ];
+    }
+
+    public function doorSaleStatus(int $orderId): array
+    {
+        $order = $this->repository->order($orderId);
+        if ($order === null || ($order['sales_channel'] ?? '') !== 'door') {
+            throw new RuntimeException('Door sale order was not found.');
+        }
+
+        $order = $this->synchronizeOrder($order);
+        $tickets = $this->repository->ticketsForOrder($orderId);
+
+        return [
+            'order_id' => $orderId,
+            'status' => (string) $order['status'],
+            'checked_in' => count(array_filter($tickets, static fn (array $ticket): bool => ! empty($ticket['checked_in_at']))),
+            'tickets' => count($tickets),
+        ];
     }
 
     public function synchronizeOrder(array $order): array

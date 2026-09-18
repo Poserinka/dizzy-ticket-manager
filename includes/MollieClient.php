@@ -17,6 +17,17 @@ final class MollieClient
         return $this->apiKey() !== '';
     }
 
+    public function configuredForPos(): bool
+    {
+        return $this->configured() && $this->terminalId() !== '';
+    }
+
+    public function terminalId(): string
+    {
+        $id = trim((string) get_option('dizzy_ticket_mollie_terminal_id', ''));
+        return preg_match('/^term_[A-Za-z0-9]+$/', $id) ? $id : '';
+    }
+
     /**
      * @param array<string, mixed> $payload
      * @return array<string, mixed>

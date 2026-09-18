@@ -1,5 +1,11 @@
 # Dizzy Ticket Manager
 
+## Door Sale / Mollie Tap
+
+Version 1.11 adds a dedicated door-sale flow for the Dizzy Controller Android app. Configure the Mollie API key and the Tap terminal ID (`term_...`) under **Tickets > Payment Settings**. The app sends a point-of-sale payment to that terminal and polls the verified Mollie status through WordPress; the Mollie key is never stored in Android.
+
+Tickets are created only after Mollie reports `paid`. Door-sale tickets are immediately marked as checked in. Failed, canceled, or expired payments create no tickets. A pending order uses the configured ticket hold period (15 minutes by default), after which its capacity is available again.
+
 Ticket sales, Mollie payments, QR tickets, reports and attendance management for Dizzy Events Manager.
 
 ## Mobile web check-in

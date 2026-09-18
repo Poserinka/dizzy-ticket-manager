@@ -7,6 +7,7 @@ namespace Dizzy\Tickets;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
+use RuntimeException;
 
 defined('ABSPATH') || exit;
 
@@ -14,7 +15,11 @@ final class MobileApiController
 {
     private const NAMESPACE = 'dizzy-controller/v1';
 
-    public function __construct(private TicketSalesRepository $repository, private MobileAuth $auth)
+    public function __construct(
+        private TicketSalesRepository $repository,
+        private MobileAuth $auth,
+        private TicketSalesService $sales
+    )
     {
     }
 
@@ -66,6 +71,21 @@ final class MobileApiController
             'callback' => [$this, 'undo'],
             'permission_callback' => [$this, 'canManage'],
             'args' => ['ticket' => ['required' => true, 'sanitize_callback' => 'sanitize_text_field']],
+        ]);
+        register_rest_route(self::NAMESPACE, '/door-sale/options', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'doorSaleOptions'],
+            'permission_callback' => [$this, 'canManage'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/door-sale', [
+            'methods' => WP_REST_Server::CREATABLE,
+            'callback' => [$this, 'createDoorSale'],
+            'permission_callback' => [$this, 'canManage'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/door-sale/(?P<id>\d+)', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'doorSaleStatus'],
+            'permission_callback' => [$this, 'canManage'],
         ]);
     }
 
@@ -177,6 +197,29 @@ final class MobileApiController
         $code = $this->ticketCode((string) $request->get_param('ticket'));
         $ok = $code !== '' && $this->repository->undoCheckInTicket($code);
         return new WP_REST_Response(['ok' => $ok], $ok ? 200 : 400);
+    }
+
+    public function doorSaleOptions(): WP_REST_Response
+    {
+        return new WP_REST_Response($this->sales->doorSaleOptions());
+    }
+
+    public function createDoorSale(WP_REST_Request $request): WP_REST_Response|\WP_Error
+    {
+        try {
+            return new WP_REST_Response($this->sales->startDoorSale((array) $request->get_json_params(), get_current_user_id()), 201);
+        } catch (RuntimeException $exception) {
+            return new \WP_Error('dizzy_door_sale_failed', $exception->getMessage(), ['status' => 400]);
+        }
+    }
+
+    public function doorSaleStatus(WP_REST_Request $request): WP_REST_Response|\WP_Error
+    {
+        try {
+            return new WP_REST_Response($this->sales->doorSaleStatus(absint($request['id'])));
+        } catch (RuntimeException $exception) {
+            return new \WP_Error('dizzy_door_sale_not_found', $exception->getMessage(), ['status' => 404]);
+        }
     }
 
     private function requestedDate(WP_REST_Request $request): string

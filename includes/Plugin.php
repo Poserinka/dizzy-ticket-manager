@@ -38,7 +38,7 @@ final class Plugin
 
         (new TicketSalesController($repository, $service, $events))->register();
         (new ReservationCheckoutBridge($repository, $service))->register();
-        (new MobileApiController($repository, $mobileAuth))->register();
+        (new MobileApiController($repository, $mobileAuth, $service))->register();
         (new CheckInWebApp())->register();
         (new CheckInRoute())->register();
         (new TicketExperience($repository))->register();

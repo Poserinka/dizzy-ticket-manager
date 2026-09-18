@@ -166,7 +166,7 @@ final class TicketSalesRepository
     /**
      * @return array{id:int,token:string,total:string,currency:string}
      */
-    public function createPendingOrder(array $type, int $quantity, array $customer): array
+    public function createPendingOrder(array $type, int $quantity, array $customer, array $context = []): array
     {
         global $wpdb;
 
@@ -217,6 +217,9 @@ final class TicketSalesRepository
                 'customer_name' => $customer['name'],
                 'customer_email' => $customer['email'],
                 'customer_phone' => $customer['phone'],
+                'sales_channel' => sanitize_key((string) ($context['sales_channel'] ?? 'online')) ?: 'online',
+                'payment_method' => sanitize_key((string) ($context['payment_method'] ?? 'mollie')) ?: 'mollie',
+                'created_by' => absint($context['created_by'] ?? 0) ?: null,
                 'status' => 'pending',
                 'total_amount' => $total,
                 'currency' => 'EUR',
@@ -306,6 +309,20 @@ final class TicketSalesRepository
     {
         global $wpdb;
         return $wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->tickets} WHERE order_id=%d ORDER BY id", $orderId), ARRAY_A) ?: [];
+    }
+
+    public function checkInOrderTickets(int $orderId, int $userId): int
+    {
+        global $wpdb;
+
+        return (int) $wpdb->query($wpdb->prepare(
+            "UPDATE {$this->tickets}
+            SET checked_in_at=%s,checked_in_by=%d
+            WHERE order_id=%d AND status='valid' AND checked_in_at IS NULL",
+            current_time('mysql', true),
+            $userId,
+            $orderId
+        ));
     }
 
     public function ticketByCode(string $code): ?array

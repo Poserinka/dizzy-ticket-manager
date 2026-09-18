@@ -41,6 +41,7 @@ final class TicketSalesAdmin
     public function settings(): void
     {
         register_setting('dizzy_ticket_payment_settings', 'dizzy_ticket_mollie_api_key', ['type' => 'string', 'sanitize_callback' => [$this, 'sanitizeApiKey'], 'default' => '']);
+        register_setting('dizzy_ticket_payment_settings', 'dizzy_ticket_mollie_terminal_id', ['type' => 'string', 'sanitize_callback' => [$this, 'sanitizeTerminalId'], 'default' => '']);
         register_setting('dizzy_ticket_payment_settings', 'dizzy_tm_ticket_hold_minutes', ['type' => 'integer', 'sanitize_callback' => static fn ($value): int => min(60, max(5, absint($value))), 'default' => 15]);
     }
 
@@ -49,6 +50,13 @@ final class TicketSalesAdmin
         $value = trim(sanitize_text_field((string) $value));
         if ($value === '') return '';
         return preg_match('/^(test|live)_[A-Za-z0-9]+$/', $value) ? $value : (string) get_option('dizzy_ticket_mollie_api_key', '');
+    }
+
+    public function sanitizeTerminalId(mixed $value): string
+    {
+        $value = trim(sanitize_text_field((string) $value));
+        if ($value === '') return '';
+        return preg_match('/^term_[A-Za-z0-9]+$/', $value) ? $value : (string) get_option('dizzy_ticket_mollie_terminal_id', '');
     }
 
     public function settingsPage(): void
@@ -61,6 +69,7 @@ final class TicketSalesAdmin
                 <?php settings_fields('dizzy_ticket_payment_settings'); ?>
                 <table class="form-table">
                     <tr><th><label for="dizzy-mollie-key"><?php esc_html_e('Mollie API key', 'dizzy-ticket-manager'); ?></label></th><td><input id="dizzy-mollie-key" type="password" class="regular-text" name="dizzy_ticket_mollie_api_key" value="<?php echo esc_attr((string) get_option('dizzy_ticket_mollie_api_key', '')); ?>" autocomplete="new-password"><p class="description"><?php esc_html_e('Start with a Mollie test_ key. Replace it with a live_ key only after testing.', 'dizzy-ticket-manager'); ?></p></td></tr>
+                    <tr><th><label for="dizzy-mollie-terminal"><?php esc_html_e('Mollie Tap terminal ID', 'dizzy-ticket-manager'); ?></label></th><td><input id="dizzy-mollie-terminal" type="text" class="regular-text" name="dizzy_ticket_mollie_terminal_id" value="<?php echo esc_attr((string) get_option('dizzy_ticket_mollie_terminal_id', '')); ?>" placeholder="term_..."><p class="description"><?php esc_html_e('The terminal ID assigned to the Android device running the Mollie Tap app.', 'dizzy-ticket-manager'); ?></p></td></tr>
                     <tr><th><label for="dizzy-hold-minutes"><?php esc_html_e('Ticket hold time', 'dizzy-ticket-manager'); ?></label></th><td><input id="dizzy-hold-minutes" type="number" min="5" max="60" name="dizzy_tm_ticket_hold_minutes" value="<?php echo esc_attr((string) get_option('dizzy_tm_ticket_hold_minutes', 15)); ?>"> <?php esc_html_e('minutes', 'dizzy-ticket-manager'); ?></td></tr>
                     <tr><th><?php esc_html_e('Mollie webhook URL', 'dizzy-ticket-manager'); ?></th><td><code><?php echo esc_html(rest_url('dizzy-tickets/v1/mollie/webhook')); ?></code></td></tr>
                 </table>

@@ -8,7 +8,7 @@ defined('ABSPATH') || exit;
 
 final class Migrations
 {
-    private const VERSION = '1.1.0';
+    private const VERSION = '1.2.0';
 
     public static function run(): void
     {
@@ -51,6 +51,9 @@ final class Migrations
             customer_name varchar(190) NOT NULL,
             customer_email varchar(190) NOT NULL,
             customer_phone varchar(64) NULL,
+            sales_channel varchar(32) NOT NULL DEFAULT 'online',
+            payment_method varchar(32) NOT NULL DEFAULT 'mollie',
+            created_by bigint(20) unsigned NULL,
             status varchar(32) NOT NULL DEFAULT 'pending',
             total_amount decimal(10,2) unsigned NOT NULL,
             currency char(3) NOT NULL DEFAULT 'EUR',
@@ -63,6 +66,7 @@ final class Migrations
             UNIQUE KEY public_token (public_token),
             KEY event_occurrence (event_id,occurrence_id),
             KEY status_expires (status,expires_at),
+            KEY sales_channel (sales_channel),
             KEY customer_email (customer_email)
         ) {$charset};");
 
