@@ -19,7 +19,7 @@ final class TicketSalesService
     }
 
     /**
-     * @return array{order_token:string,checkout_url:string}
+     * @return array{order_id:int,order_token:string,checkout_url:string}
      */
     public function start(array $data): array
     {
@@ -91,7 +91,7 @@ final class TicketSalesService
             throw new RuntimeException('Mollie did not return a checkout URL.');
         }
 
-        return ['order_token' => $order['token'], 'checkout_url' => $checkout];
+        return ['order_id' => (int) $order['id'], 'order_token' => $order['token'], 'checkout_url' => $checkout];
     }
 
     public function synchronize(string $paymentId): ?array
@@ -105,6 +105,7 @@ final class TicketSalesService
         $before = $this->repository->order((int) $stored['order_id']);
         $payment = $this->mollie->getPayment($paymentId);
         $order = $this->repository->applyPayment($payment);
+        do_action('dizzy_ticket_order_status_changed', $order, $before);
 
         if (
             ($order['status'] ?? '') === 'paid'
